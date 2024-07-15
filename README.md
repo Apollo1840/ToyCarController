@@ -12,7 +12,7 @@ and a working space with wifi access.
 
 ### Step 1: Initialize a remotely developable Raspberry Pi 3 Board
 
-1) Run Command (Laptop): on the laptop, turn on the terminal, and type, then type enter:
+1) Run Command: on the laptop, turn on the terminal, and type, then type enter:
 
    ```bash
    snap install rpi-imager 
@@ -23,7 +23,7 @@ and a working space with wifi access.
    # Action: plug-in: MicroSD -> Laptop  # may need converter
    ```
    
-3) Run Program (Laptop):
+3) Run Program:
 
     ```bash
    # Action: Open the **Raspberry Pi imager** App.
@@ -31,7 +31,7 @@ and a working space with wifi access.
    # Action: Click run and wait it finished.
    ```
 
-3) Run Command (Laptop):
+3) Run Command:
    
     ```bash
     # navigate to the root of the MicroSD card
@@ -59,12 +59,13 @@ and a working space with wifi access.
    # Action: plug-out: MicroSD <- Laptop
    # Action: plug-in:  MicroSD -> Raspberry Pi 3 Board
    # Action: plug-in:  Power cable -> Raspberry Pi 3 Board
+   
    # Action: wait ~10 minutes (for raspberry to setup automatically)
    ```
 
 ### Step 2: Test the remote access.
 
-1) Run command (Laptop):
+1) Run Command:
 
     ```bash
     # locate the IP of the rasberry PI. run: 
@@ -77,28 +78,44 @@ and a working space with wifi access.
     # Action: Figure out your Rasberry IP. (eg. 192.168.1.xxx)
     ```
    
-3) Run command (Laptop):
+3) Run Command:
 
    ```bash
    ssh pi@192.168.1.xxx
    # for password, type in: raspberry
    ```
 
-3) Run command (Laptop):
+3) Run Command:
 
    ```bash
    exit
    ```
    
-### Step 3: Clone the repository to the Raspberry Pi
+### Step 3: Setup environment and Clone the repository to the Raspberry Pi
 
-3) Run command (Laptop):
+1) Run Command:
 
    ```bash
    ssh pi@192.168.1.xxx
-   # for password, type in: raspberry
-   
-   git clone <this git repository>
+   # for password, type in: raspberry  
    ```
+
+2) Run Command:
+   
+   ```bash
+   sudo apt install python3-venv
+   python3 -m venv toy_car_controller
+   source toy_car_controller/bin/activate
+   ```
+
+2) Run Command:
+   
+   ```bash
+   git clone <this git repository>
+   cd ToyCarController
+   pip3 install -r requirements.txt
+   ```
+   
+
 
 
