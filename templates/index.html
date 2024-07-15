@@ -15,15 +15,22 @@
             flex-direction: column;
             align-items: center;
         }
+        .horizontal-buttons {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
     <h1>Servo Control</h1>
     <div class="control-buttons">
-        <button id="up-button" onmousedown="startMoving('up')" onmouseup="stopMoving()">Up</button>
-        <button id="down-button" onmousedown="startMoving('down')" onmouseup="stopMoving()">Down</button>
-        <button id="left-button" onmousedown="startMoving('left')" onmouseup="stopMoving()">Left</button>
-        <button id="right-button" onmousedown="startMoving('right')" onmouseup="stopMoving()">Right</button>
+        <button id="up-button" onmousedown="startMoving('up')" onmouseup="stopMoving()" ontouchstart="startMoving('up')" ontouchend="stopMoving()">Up</button>
+        <div class="horizontal-buttons">
+            <button id="left-button" onmousedown="startMoving('left')" onmouseup="stopMoving()" ontouchstart="startMoving('left')" ontouchend="stopMoving()">Left</button>
+            <button id="right-button" onmousedown="startMoving('right')" onmouseup="stopMoving()" ontouchstart="startMoving('right')" ontouchend="stopMoving()">Right</button>
+        </div>
+        <button id="down-button" onmousedown="startMoving('down')" onmouseup="stopMoving()" ontouchstart="startMoving('down')" ontouchend="stopMoving()">Down</button>
     </div>
     <script>
         let moveInterval;
@@ -38,9 +45,10 @@
             clearInterval(moveInterval);
         }
 
-        // Ensure that movement stops if the mouse leaves the button
+        // Ensure that movement stops if the mouse or touch leaves the button
         document.querySelectorAll('button').forEach(button => {
             button.onmouseleave = stopMoving;
+            button.ontouchcancel = stopMoving;
         });
     </script>
 </body>
