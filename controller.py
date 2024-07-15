@@ -13,6 +13,9 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
+    global horizontal_angle, vertical_angle
+    horizontal_angle = 0
+    vertical_angle = 0
     return render_template('index.html')
 
 
