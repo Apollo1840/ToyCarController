@@ -1,2 +1,3 @@
 adafruit-circuitpython-motorkit
 adafruit-circuitpython-servokit
+flask==2.2.2

@@ -116,6 +116,40 @@ and a working space with wifi access.
    pip3 install -r requirements.txt
    ```
    
+### Step 4: Install Servo
 
+1) Plug In:
+   
+   ```bash
+   # Action: plug-out: Power cable <- Raspberry Pi 3 Board
+   # Action: plug-in:  Adafruit Control Board -> Raspberry Pi 3 Board
+   # Action: plug-in:  Servo -> Adafruit Control Board
+   # Action: plug-in:  Power cable -> Adafruit Control Board
+   # Action: plug-in:  Power cable -> Raspberry Pi 3 Board
+   
+   # Action: wait ~3 minutes (for raspberry to start)
+   ```
 
+### Step 5: Play
+
+1) Run Command:
+
+   ```bash
+   # you might need to re-connect the resberry board
+   ssh pi@192.168.1.xxx
+   # for password, type in: raspberry  
+   ```
+
+   ```bash
+   source toy_car_controller/bin/activate
+   cd ToyCarController
+   python controller.py
+   ```
+
+2) Run Program:
+
+   ```bash
+   # Action: open a **browser** (from only device under same wifi)
+   # Action: go to 'http://192.168.1.xxx:5000'
+   ```
 
