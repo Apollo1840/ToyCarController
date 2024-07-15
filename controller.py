@@ -6,7 +6,7 @@ kit = ServoKit(channels=16)
 
 # Initial positions for servos
 horizontal_angle = 90
-vertical_angle = 90
+vertical_angle = 0
 
 app = Flask(__name__)
 
