@@ -10,7 +10,7 @@ horizontal_range = (40, 180)
 vertical_range = (0, 50)
 horizontal_angle = horizontal_range[1]//2
 vertical_angle = vertical_range[1]//2
-horizontal_step = horizontal_range[1]//20
+horizontal_step = horizontal_range[1]//30
 vertical_step = vertical_range[1]//20
 
 # Initialize the Flask application
