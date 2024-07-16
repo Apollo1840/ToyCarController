@@ -7,7 +7,7 @@ kit = ServoKit(channels=16)
 
 # Initial positions for servos
 horizontal_angle = 90
-vertical_angle = 0
+vertical_angle = 90
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -18,8 +18,8 @@ camera = cv2.VideoCapture(0)
 @app.route('/')
 def index():
     global horizontal_angle, vertical_angle
-    horizontal_angle = 0
-    vertical_angle = 0
+    horizontal_angle = 90
+    vertical_angle = 90
     return render_template('index.html')
 
 @app.route('/move')
@@ -31,7 +31,7 @@ def move():
         vertical_angle = min(vertical_angle + 10, 180)
         kit.servo[1].angle = vertical_angle
     elif direction == 'down':
-        vertical_angle = max(vertical_angle - 10, -20)
+        vertical_angle = max(vertical_angle - 10, 0)
         kit.servo[1].angle = vertical_angle
     elif direction == 'left':
         horizontal_angle = max(horizontal_angle - 10, 0)
