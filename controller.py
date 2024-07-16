@@ -35,10 +35,10 @@ def move():
         vertical_angle = min(vertical_angle - vertical_step, vertical_range[0])
         kit.servo[1].angle = vertical_angle
     elif direction == 'right':
-        horizontal_angle = max(horizontal_angle - horizontal_range, horizontal_range[0])
+        horizontal_angle = max(horizontal_angle - horizontal_step, horizontal_range[0])
         kit.servo[0].angle = horizontal_angle
     elif direction == 'left':
-        horizontal_angle = min(horizontal_angle + horizontal_range, horizontal_range[1])
+        horizontal_angle = min(horizontal_angle + horizontal_step, horizontal_range[1])
         kit.servo[0].angle = horizontal_angle
 
     return ('', 204)  # Return an empty response
