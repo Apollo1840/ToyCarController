@@ -6,8 +6,8 @@ import cv2
 kit = ServoKit(channels=16)
 
 # Initial positions for servos
-horizontal_range = (0, 180)
-vertical_range = (0, 90)
+horizontal_range = (40, 180)
+vertical_range = (0, 50)
 horizontal_angle = horizontal_range[1]//2
 vertical_angle = vertical_range[1]//2
 horizontal_step = horizontal_range[1]//20
