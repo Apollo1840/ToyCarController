@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 from adafruit_servokit import ServoKit
+import cv2
 
 # Initialize the ServoKit for 16 channels
 kit = ServoKit(channels=16)
@@ -8,8 +9,11 @@ kit = ServoKit(channels=16)
 horizontal_angle = 90
 vertical_angle = 0
 
+# Initialize the Flask application
 app = Flask(__name__)
 
+# Open the video capture (assuming the USB camera is at /dev/video0)
+camera = cv2.VideoCapture(0)
 
 @app.route('/')
 def index():
@@ -17,7 +21,6 @@ def index():
     horizontal_angle = 0
     vertical_angle = 0
     return render_template('index.html')
-
 
 @app.route('/move')
 def move():
@@ -39,6 +42,21 @@ def move():
 
     return ('', 204)  # Return an empty response
 
+def generate_frames():
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

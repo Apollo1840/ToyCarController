@@ -20,6 +20,9 @@
             justify-content: center;
             margin: 10px 0;
         }
+        video {
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -32,6 +35,7 @@
         </div>
         <button id="down-button" onmousedown="startMoving('down')" onmouseup="stopMoving()" ontouchstart="startMoving('down')" ontouchend="stopMoving()">Down</button>
     </div>
+    <video id="video" width="640" height="480" autoplay></video>
     <script>
         let moveInterval;
 
@@ -50,6 +54,15 @@
             button.onmouseleave = stopMoving;
             button.ontouchcancel = stopMoving;
         });
+
+        // Set up the video stream
+        function startVideoStream() {
+            const video = document.getElementById('video');
+            const streamUrl = '/video_feed';
+            video.src = streamUrl;
+        }
+
+        document.addEventListener('DOMContentLoaded', startVideoStream);
     </script>
 </body>
 </html>
