@@ -11,12 +11,12 @@ kit.servo[1].angle = 0
 sleep(1)
 
 while True:
-    for angle in range(0, 90, 10):
+    for angle in range(0, 60, 10):
         kit.servo[1].angle = angle
         print(f"angle at {angle} degree for 3 seconds")
-        sleep(2)
+        sleep(3)
 
-    for angle in range(0, 170, 10):
+    for angle in range(0, 180, 10):
         kit.servo[0].angle = angle
         print(f"angle at {angle} degree for 3 seconds")
-        sleep(2)
+        sleep(3)
