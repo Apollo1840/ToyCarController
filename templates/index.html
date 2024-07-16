@@ -5,27 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Servo Control</title>
     <style>
-        button {
-            font-size: 24px;
-            margin: 10px;
-            padding: 15px;
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
         }
+
+        h1 {
+            margin: 20px 0;
+            font-size: 24px;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 640px;
+            padding: 10px;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            border: 2px solid #007BFF;
+            border-radius: 10px;
+        }
+
         .control-buttons {
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin: 20px 0;
         }
+
         .horizontal-buttons {
             display: flex;
             justify-content: center;
             margin: 10px 0;
         }
-        video {
-            margin: 20px 0;
+
+        button {
+            font-size: 18px;
+            margin: 5px;
+            padding: 15px;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:active {
+            background-color: #0056b3;
+        }
+
+        @media (min-width: 768px) {
+            button {
+                font-size: 24px;
+                width: 100px;
+                height: 100px;
+            }
         }
     </style>
 </head>
 <body>
+    <h1>USB Camera Stream</h1>
+    <div class="video-container">
+        <img src="/video_feed" alt="Camera Stream">
+    </div>
     <h1>Servo Control</h1>
     <div class="control-buttons">
         <button id="up-button" onmousedown="startMoving('up')" onmouseup="stopMoving()" ontouchstart="startMoving('up')" ontouchend="stopMoving()">Up</button>
@@ -35,8 +85,6 @@
         </div>
         <button id="down-button" onmousedown="startMoving('down')" onmouseup="stopMoving()" ontouchstart="startMoving('down')" ontouchend="stopMoving()">Down</button>
     </div>
-    <h1>USB Camera Stream</h1>
-    <img src="/video_feed">
     <script>
         let moveInterval;
 
