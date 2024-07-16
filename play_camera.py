@@ -1,19 +1,19 @@
 from flask import Flask, Response
-from picamera import PiCamera
-from io import BytesIO
+import cv2
 
 app = Flask(__name__)
-camera = PiCamera()
 
 def generate_frames():
-    stream = BytesIO()
-    for _ in camera.capture_continuous(stream, 'jpeg', use_video_port=True):
-        stream.seek(0)
-        frame = stream.read()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        stream.seek(0)
-        stream.truncate()
+    camera = cv2.VideoCapture(0)  # 0表示第一个USB摄像头
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route('/video_feed')
 def video_feed():
@@ -22,8 +22,7 @@ def video_feed():
 
 @app.route('/')
 def index():
-    return "<h1>Raspberry Pi Camera Stream</h1><img src='/video_feed'>"
+    return "<h1>USB Camera Stream</h1><img src='/video_feed'>"
 
 if __name__ == '__main__':
-    camera.start_preview()
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5000)
