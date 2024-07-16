@@ -5,6 +5,7 @@
 - A Raspberry Pi 3 Board with power cable
 - A MicroSD card
 - A MicroSD to USB converter
+- A Servo with Camera
 
 and a working space with wifi access.
 
@@ -40,7 +41,7 @@ and a working space with wifi access.
     nano wpa_supplicant.conf
    ```
 
-4) Type In: type the following content and save.
+4) Type In (Accordingly): type the following content according to your true information and save.
    
 ```bash
             country=YOUR_CONTRY_CODE  # eg. US
@@ -69,23 +70,39 @@ and a working space with wifi access.
 
     ```bash
     # locate the IP of the rasberry PI. run: 
-    nmap -sn 192.168.1.0/24
+    ip route | grep default
     ```
 
 2) Observe:
 
     ```bash
+    # Information: you will see something like default via 192.168.1.1 dev wlan0 proto dhcp metric 600. 
+    # Action: Figure out your router's IP address (e.g., 192.168.1.1)
+    ```
+
+
+   
+3) Run Command (Accordingly):
+
+    ```bash
+    # Modify the following IP based on your Router IP.
+    nmap -sn 192.168.1.0/24
+    ```
+   
+4) Observe:
+
+    ```bash
     # Action: Figure out your Rasberry IP. (eg. 192.168.1.xxx)
     ```
    
-3) Run Command:
+5) Run Command (Accordingly):
 
    ```bash
    ssh pi@192.168.1.xxx
    # for password, type in: raspberry
    ```
-
-3) Run Command:
+   
+6) Run Command:
 
    ```bash
    exit
@@ -93,7 +110,7 @@ and a working space with wifi access.
    
 ### Step 3: Setup environment and Clone the repository to the Raspberry Pi
 
-1) Run Command:
+1) Run Command (Accordingly):
 
    ```bash
    ssh pi@192.168.1.xxx
@@ -124,6 +141,7 @@ and a working space with wifi access.
    # Action: plug-out: Power cable <- Raspberry Pi 3 Board
    # Action: plug-in:  Adafruit Control Board -> Raspberry Pi 3 Board
    # Action: plug-in:  Servo -> Adafruit Control Board
+   # Action: plug-in:  Camera -(USB)-> Raspberry Pi 3 Board
    # Action: plug-in:  Power cable -> Adafruit Control Board
    # Action: plug-in:  Power cable -> Raspberry Pi 3 Board
    
@@ -132,14 +150,15 @@ and a working space with wifi access.
 
 ### Step 5: Play
 
-1) Run Command:
+1) Run Command (Accordingly):
 
    ```bash
    # you might need to re-connect the resberry board
    ssh pi@192.168.1.xxx
    # for password, type in: raspberry  
    ```
-
+   
+2) Run Command:
    ```bash
    source toy_car_controller/bin/activate
    cd ToyCarController
@@ -149,7 +168,7 @@ and a working space with wifi access.
 2) Run Program:
 
    ```bash
-   # Action: open a **browser** (from only device under same wifi)
-   # Action: go to 'http://192.168.1.xxx:5000'
+   # Action: open a **browser** (from any device under same wifi)
+   # Action(accordingly): go to 'http://192.168.1.xxx:5000'
    ```
 
