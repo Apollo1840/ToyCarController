@@ -35,7 +35,8 @@
         </div>
         <button id="down-button" onmousedown="startMoving('down')" onmouseup="stopMoving()" ontouchstart="startMoving('down')" ontouchend="stopMoving()">Down</button>
     </div>
-    <video id="video" width="640" height="480" autoplay></video>
+    <h1>USB Camera Stream</h1>
+    <img src="/video_feed">
     <script>
         let moveInterval;
 
@@ -54,15 +55,6 @@
             button.onmouseleave = stopMoving;
             button.ontouchcancel = stopMoving;
         });
-
-        // Set up the video stream
-        function startVideoStream() {
-            const video = document.getElementById('video');
-            const streamUrl = '/video_feed';
-            video.src = streamUrl;
-        }
-
-        document.addEventListener('DOMContentLoaded', startVideoStream);
     </script>
 </body>
 </html>
