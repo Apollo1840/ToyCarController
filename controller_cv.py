@@ -76,7 +76,7 @@ def face_detection_loop():
             with faces_lock:
                 faces = detected_faces
 
-        last_detection_time = current_time
+            last_detection_time = current_time
 
 
 def generate_frames():
