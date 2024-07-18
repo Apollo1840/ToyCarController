@@ -48,7 +48,8 @@ class TrackableServoController(ServoController):
 
     def track_face(self, face_x, face_y):
         if self.is_tracking:
-            logging.info(f"Navigating face at x: {face_x}, y: {face_y} to the center x: {center_x}, y: {center_y} ")
+            logging.info(
+                f"Navigating face at x: {face_x}, y: {face_y} to the center x: {self.frame_center_x}, y: {self.frame_center_y} ")
 
             # if center is too right(high x value of center), move the camera left
             if face_x < self.frame_center_x - self.tracking_tol:
