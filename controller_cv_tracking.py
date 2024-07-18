@@ -4,23 +4,25 @@ import cv2
 import time
 import threading
 import logging
+from collections import deque
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-
 
 class ServoController:
     def __init__(self, channels=16):
         self.kit = ServoKit(channels=channels)
         self.horizontal_range = (40, 180)
         self.vertical_range = (0, 50)
-        self.horizontal_angle = self.horizontal_range[1] // 2
-        self.vertical_angle = self.vertical_range[1] // 2
+        self.horizontal_angle = (self.horizontal_range[1] + self.horizontal_range[0]) // 2
+        self.vertical_angle = (self.vertical_range[1] + self.vertical_range[0]) // 2
         self.horizontal_step = self.horizontal_range[1] // 60
         self.vertical_step = self.vertical_range[1] // 40
         self.is_tracking = False
         self.tracking_tol = 20
         self.tracking_thread = None
+        self.stop_tracking_flag = threading.Event()
+        self.face_positions = deque(maxlen=5)  # Store recent face positions for smoothing
 
     def move_servo(self, direction):
         if direction == 'up':
@@ -39,45 +41,53 @@ class ServoController:
     def set_tracking(self, tracking):
         self.is_tracking = tracking
         if tracking:
+            self.stop_tracking_flag.clear()
             self.tracking_thread = threading.Thread(target=self.tracking_loop)
             self.tracking_thread.start()
         else:
+            self.stop_tracking_flag.set()
             if self.tracking_thread:
                 self.tracking_thread.join()
 
     def tracking_loop(self):
-        while self.is_tracking:
+        frame_width = 640  # Assuming a fixed frame width
+        frame_height = 480  # Assuming a fixed frame height
+        while not self.stop_tracking_flag.is_set():
             with face_detector.faces_lock:
-                if len(face_detector.faces)>0:
+                if len(face_detector.faces) > 0:
                     x, y, w, h = face_detector.faces[0]
                     face_x, face_y = x + w // 2, y + h // 2
-                    frame_width = 640  # Assuming a fixed frame width
-                    frame_height = 480  # Assuming a fixed frame height
-                    self.track_face(face_x, face_y, frame_width, frame_height)
-            time.sleep(0.2)  # Adjust the sleep time as needed
+                    self.face_positions.append((face_x, face_y))
+
+            if len(self.face_positions) > 0:
+                avg_face_x = sum([pos[0] for pos in self.face_positions]) / len(self.face_positions)
+                avg_face_y = sum([pos[1] for pos in self.face_positions]) / len(self.face_positions)
+                self.track_face(avg_face_x, avg_face_y, frame_width, frame_height)
+
+            time.sleep(0.1)  # Adjust the sleep time as needed
 
     def track_face(self, face_x, face_y, frame_width, frame_height):
         if self.is_tracking:
             center_x, center_y = frame_width // 2, frame_height // 2
             logging.info(f"Navigating face at x: {face_x}, y: {face_y} to the center x: {center_x}, y: {center_y} ")
 
-            # if center is too right(high x value), move the camera left
+            # if center is too right(high x value of center), move the camera left
             if face_x < center_x - self.tracking_tol:
                 self.move_servo('left')
-                logging.info(f"> move the camera left")
+                # logging.info(f"> move the camera left")
 
             elif face_x > center_x + self.tracking_tol:
                 self.move_servo('right')
-                logging.info(f"> move the camera right")
+                # logging.info(f"> move the camera right")
 
-            # if center is too high(low y value), move the camera down
+            # if center is too high(low y value of center), move the camera down
             if face_y > center_y + self.tracking_tol:
                 self.move_servo('down')
-                logging.info(f"> move the camera down")
+                # logging.info(f"> move the camera down")
 
             elif face_y < center_y - self.tracking_tol:
                 self.move_servo('up')
-                logging.info(f"> move the camera up")
+                # logging.info(f"> move the camera up")
 
 
 class FaceDetector:
