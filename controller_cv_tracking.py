@@ -9,6 +9,7 @@ from collections import deque
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+
 class ServoController:
     def __init__(self, channels=16):
         self.kit = ServoKit(channels=channels)
@@ -53,16 +54,11 @@ class ServoController:
         frame_width = 640  # Assuming a fixed frame width
         frame_height = 480  # Assuming a fixed frame height
         while not self.stop_tracking_flag.is_set():
-            with face_detector.faces_lock:
-                if len(face_detector.faces) > 0:
-                    x, y, w, h = face_detector.faces[0]
-                    face_x, face_y = x + w // 2, y + h // 2
-                    self.face_positions.append((face_x, face_y))
+            face_x, face_y = face_detector.face_center()
 
-            if len(self.face_positions) > 0:
-                avg_face_x = sum([pos[0] for pos in self.face_positions]) / len(self.face_positions)
-                avg_face_y = sum([pos[1] for pos in self.face_positions]) / len(self.face_positions)
-                self.track_face(avg_face_x, avg_face_y, frame_width, frame_height)
+            target_x, target_y = self.tracking_face_algorithm(face_x, face_y)
+            if target_x is not None and target_y is not None:
+                self.track_face(target_x, target_y, frame_width, frame_height)
 
             time.sleep(0.1)  # Adjust the sleep time as needed
 
@@ -88,6 +84,20 @@ class ServoController:
             elif face_y < center_y - self.tracking_tol:
                 self.move_servo('up')
                 # logging.info(f"> move the camera up")
+
+    def tracking_face_algorithm(self, face_x, face_y):
+        if face_x is not None and face_y is not None:
+            self.face_positions.append((face_x, face_y))
+
+        target_x, target_y = None, None
+        if len(self.face_positions) > 0:
+            weights = [2 ** i for i in range(len(self.face_positions))]
+            total_weight = sum(weights)
+            weighted_x = sum(pos[0] * weight for pos, weight in zip(self.face_positions, weights)) / total_weight
+            weighted_y = sum(pos[1] * weight for pos, weight in zip(self.face_positions, weights)) / total_weight
+            target_x = weighted_x
+            target_y = weighted_y
+        return target_x, target_y
 
 
 class FaceDetector:
@@ -125,17 +135,31 @@ class FaceDetector:
             success, frame = self.camera.read()
             if not success:
                 break
-            with self.faces_lock:
-                current_faces = self.faces
 
-            if len(current_faces) >= 1:
-                x, y, w, h = current_faces[0]
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            ul, lr = self.face_box()
+            if ul and lr:
+                cv2.rectangle(frame, ul, lr, color=(255, 0, 0), thickness=2)
 
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+    def face_center(self):
+        face_x, face_y = None, None
+        with self.faces_lock:
+            if len(self.faces) > 0:
+                x, y, w, h = self.faces[0]
+                face_x, face_y = x + w // 2, y + h // 2
+        return face_x, face_y
+
+    def face_box(self):
+        ul, lr = None, None
+        with self.faces_lock:
+            if len(self.faces) > 0:
+                x, y, w, h = self.faces[0]
+                ul, lr = (x, y), (x + w, y + h)
+        return ul, lr
 
 
 app = Flask(__name__)
