@@ -4,21 +4,7 @@ import cv2
 import time
 import threading
 
-# Initialize the ServoKit for 16 channels
-kit = ServoKit(channels=16)
-
-# Initial positions for servos
-horizontal_range = (40, 180)
-vertical_range = (0, 50)
-horizontal_angle = horizontal_range[1] // 2
-vertical_angle = vertical_range[1] // 2
-horizontal_step = horizontal_range[1] // 30
-vertical_step = vertical_range[1] // 20
-
 detect_frame_rate = 5  # Detection frame rate in Hz
-
-# Initialize the Flask application
-app = Flask(__name__)
 
 # Open the video capture (assuming the USB camera is at /dev/video0)
 camera = cv2.VideoCapture(0)
@@ -31,6 +17,31 @@ face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_fronta
 # Shared resource for faces
 faces = []
 faces_lock = threading.Lock()
+
+
+class ServoController:
+    def __init__(self, channels=16):
+        self.kit = ServoKit(channels=channels)
+        self.horizontal_range = (40, 180)
+        self.vertical_range = (0, 50)
+        self.horizontal_angle = self.horizontal_range[1] // 2
+        self.vertical_angle = self.vertical_range[1] // 2
+        self.horizontal_step = self.horizontal_range[1] // 30
+        self.vertical_step = self.vertical_range[1] // 20
+
+    def move_servo(self, direction):
+        if direction == 'up':
+            self.vertical_angle = min(self.vertical_angle + self.vertical_step, self.vertical_range[1])
+            self.kit.servo[1].angle = self.vertical_angle
+        elif direction == 'down':
+            self.vertical_angle = max(self.vertical_angle - self.vertical_step, self.vertical_range[0])
+            self.kit.servo[1].angle = self.vertical_angle
+        elif direction == 'right':
+            self.horizontal_angle = max(self.horizontal_angle - self.horizontal_step, self.horizontal_range[0])
+            self.kit.servo[0].angle = self.horizontal_angle
+        elif direction == 'left':
+            self.horizontal_angle = min(self.horizontal_angle + self.horizontal_step, self.horizontal_range[1])
+            self.kit.servo[0].angle = self.horizontal_angle
 
 
 def face_detection_loop():
@@ -75,6 +86,10 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
+app = Flask(__name__)
+servo_controller = ServoController()
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -82,23 +97,9 @@ def index():
 
 @app.route('/move')
 def move():
-    global horizontal_angle, vertical_angle
     direction = request.args.get('direction')
-
-    if direction == 'up':
-        vertical_angle = min(vertical_angle + vertical_step, vertical_range[1])
-        kit.servo[1].angle = vertical_angle
-    elif direction == 'down':
-        vertical_angle = max(vertical_angle - vertical_step, vertical_range[0])
-        kit.servo[1].angle = vertical_angle
-    elif direction == 'right':
-        horizontal_angle = max(horizontal_angle - horizontal_step, horizontal_range[0])
-        kit.servo[0].angle = horizontal_angle
-    elif direction == 'left':
-        horizontal_angle = min(horizontal_angle + horizontal_step, horizontal_range[1])
-        kit.servo[0].angle = horizontal_angle
-
-    return ('', 204)  # Return an empty response
+    servo_controller.move_servo(direction)
+    return ('', 204)
 
 
 @app.route('/video_feed')

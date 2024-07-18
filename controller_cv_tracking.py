@@ -4,25 +4,6 @@ import cv2
 import time
 import threading
 
-# Initialize the ServoKit for 16 channels
-kit = ServoKit(channels=16)
-
-detect_frame_rate = 5  # Detection frame rate in Hz
-
-# Open the video capture (assuming the USB camera is at /dev/video0)
-camera = cv2.VideoCapture(0)
-# camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-# camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-# Initialize the Flask application
-
-
-# Load the Haar cascade file for face detection
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-# Shared resource for faces
-faces = []
-faces_lock = threading.Lock()
-
 
 class ServoController:
     def __init__(self, channels=16):
@@ -49,50 +30,49 @@ class ServoController:
             self.kit.servo[0].angle = self.horizontal_angle
 
 
-def face_detection_loop():
-    global faces
-    last_detection_time = 0
+class FaceDetector:
+    def __init__(self, camera_index=0, cascade_path=cv2.data.haarcascades + 'haarcascade_frontalface_default.xml',
+                 frame_rate=5):
+        self.camera = cv2.VideoCapture(camera_index)
+        self.face_cascade = cv2.CascadeClassifier(cascade_path)
+        self.frame_rate = frame_rate
+        self.faces = []
+        self.faces_lock = threading.Lock()
 
-    while True:
-        current_time = time.time()
-        if current_time - last_detection_time >= 1 / detect_frame_rate:
-            success, frame = camera.read()
+    def detect_faces(self):
+        last_detection_time = 0
+        while True:
+            current_time = time.time()
+            if current_time - last_detection_time >= 1 / self.frame_rate:
+                success, frame = self.camera.read()
+                if not success:
+                    continue
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                detected_faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5,
+                                                                    minSize=(30, 30))
+                with self.faces_lock:
+                    self.faces = detected_faces if len(detected_faces) > 0 else []
+                last_detection_time = current_time
+
+    def generate_frames(self):
+        while True:
+            success, frame = self.camera.read()
             if not success:
-                continue
-
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            detected_faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
-            with faces_lock:
-                faces = detected_faces
-
-            last_detection_time = current_time
-
-
-def generate_frames():
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-
-        with faces_lock:
-            current_faces = faces
-
-        # for (x, y, w, h) in current_faces:
-        #    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-        if len(current_faces) >= 1:
-            x, y, w, h = current_faces[0]
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                break
+            with self.faces_lock:
+                current_faces = self.faces
+            if current_faces:
+                for (x, y, w, h) in current_faces:
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
 app = Flask(__name__)
 servo_controller = ServoController()
+face_detector = FaceDetector()
 
 
 @app.route('/')
@@ -109,12 +89,10 @@ def move():
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(),
+    return Response(face_detector.generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 if __name__ == '__main__':
-    # Start face detection in a separate thread
-    threading.Thread(target=face_detection_loop, daemon=True).start()
-
+    threading.Thread(target=face_detector.detect_faces, daemon=True).start()
     app.run(host='0.0.0.0', port=5000)
