@@ -20,6 +20,7 @@ class ServoController:
         self.vertical_step = self.vertical_range[1] // 20
         self.is_tracking = False
         self.tracking_tol = 20
+        self.tracking_thread = None
 
     def move_servo(self, direction):
         if direction == 'up':
@@ -37,6 +38,23 @@ class ServoController:
 
     def set_tracking(self, tracking):
         self.is_tracking = tracking
+        if tracking:
+            self.tracking_thread = threading.Thread(target=self.tracking_loop)
+            self.tracking_thread.start()
+        else:
+            if self.tracking_thread:
+                self.tracking_thread.join()
+
+    def tracking_loop(self):
+        while self.is_tracking:
+            with face_detector.faces_lock:
+                if face_detector.faces:
+                    x, y, w, h = face_detector.faces[0]
+                    face_x, face_y = x + w // 2, y + h // 2
+                    frame_width = 640  # Assuming a fixed frame width
+                    frame_height = 480  # Assuming a fixed frame height
+                    self.track_face(face_x, face_y, frame_width, frame_height)
+            time.sleep(0.1)  # Adjust the sleep time as needed
 
     def track_face(self, face_x, face_y, frame_width, frame_height):
         if self.is_tracking:
@@ -95,7 +113,7 @@ class FaceDetector:
             if len(current_faces) >= 1:
                 x, y, w, h = current_faces[0]
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-                servo_controller.track_face(x + w // 2, y + h // 2, frame.shape[1], frame.shape[0])
+                print(frame.shape)
 
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
@@ -135,5 +153,4 @@ def video_feed():
 
 if __name__ == '__main__':
     threading.Thread(target=face_detector.detect_faces, daemon=True).start()
-
     app.run(host='0.0.0.0', port=5000)
