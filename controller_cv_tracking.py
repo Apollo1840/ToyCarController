@@ -19,6 +19,8 @@ class TrackableServoController(ServoController):
 
         self.is_tracking = False
         self.tracking_tol = 20
+        self.tracking_speed = 0.25   # recommend: 0.1-1
+        self.tracking_freq = 10      # Hz
         self.tracking_thread = None
         self.stop_tracking_flag = threading.Event()
 
@@ -48,7 +50,7 @@ class TrackableServoController(ServoController):
             if target_x is not None and target_y is not None:
                 self.track_face(target_x, target_y)
 
-            time.sleep(0.2)  # Adjust the sleep time as needed
+            time.sleep(1/self.tracking_freq)  # Adjust the sleep time as needed
 
     def track_face(self, face_x, face_y):
         if self.is_tracking:
@@ -59,20 +61,20 @@ class TrackableServoController(ServoController):
 
             # if center is too right(high x value of center), move the camera left
             if face_x < self.frame_center_x - self.tracking_tol:
-                self.move_servo('left', amplify=0.2)
+                self.move_servo('left', amplify=self.tracking_speed)
                 logging.info(f"{self.__class__.__name__}: Moved the camera left")
 
             elif face_x > self.frame_center_x + self.tracking_tol:
-                self.move_servo('right', amplify=0.2)
+                self.move_servo('right', amplify=self.tracking_speed)
                 logging.info(f"{self.__class__.__name__}: Moved the camera right")
 
             # if center is too high(low y value of center), move the camera down
             if face_y > self.frame_center_y + self.tracking_tol:
-                self.move_servo('down', amplify=0.2)
+                self.move_servo('down', amplify=self.tracking_speed)
                 logging.info(f"{self.__class__.__name__}: Moved the camera down")
 
             elif face_y < self.frame_center_y - self.tracking_tol:
-                self.move_servo('up', amplify=0.2)
+                self.move_servo('up', amplify=self.tracking_speed)
                 logging.info(f"{self.__class__.__name__}: Moved the camera up")
 
     def tracking_face_algorithm(self, face_x, face_y):
