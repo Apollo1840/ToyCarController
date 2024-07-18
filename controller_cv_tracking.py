@@ -61,15 +61,23 @@ class ServoController:
             center_x, center_y = frame_width // 2, frame_height // 2
             logging.info(f"Navigating face at x: {face_x}, y: {face_y} to the center x: {center_x}, y: {center_y} ")
 
+            # if center is too right(high x value), move the camera left
             if face_x < center_x - self.tracking_tol:
                 self.move_servo('left')
+                logging.info(f"> move the camera left")
+
             elif face_x > center_x + self.tracking_tol:
                 self.move_servo('right')
+                logging.info(f"> move the camera right")
 
+            # if center is too high(high y value), move the camera down
             if face_y < center_y - self.tracking_tol:
                 self.move_servo('down')
+                logging.info(f"> move the camera down")
+
             elif face_y > center_y + self.tracking_tol:
                 self.move_servo('up')
+                logging.info(f"> move the camera up")
 
 
 class FaceDetector:
