@@ -4,7 +4,6 @@ import cv2
 import time
 import threading
 
-
 class ServoController:
     def __init__(self, channels=16):
         self.kit = ServoKit(channels=channels)
@@ -29,79 +28,50 @@ class ServoController:
             self.horizontal_angle = min(self.horizontal_angle + self.horizontal_step, self.horizontal_range[1])
             self.kit.servo[0].angle = self.horizontal_angle
 
-
-class Camera:
-    def __init__(self, camera_index=0):
-        self.camera = cv2.VideoCapture(camera_index)
-        self.frame_lock = threading.Lock()
-        self.frame = None
-        threading.Thread(target=self.update_frame, daemon=True).start()
-
-    def update_frame(self):
-        while True:
-            success, frame = self.camera.read()
-            if success:
-                with self.frame_lock:
-                    self.frame = frame
-
-    def get_frame(self):
-        with self.frame_lock:
-            return self.frame
-
-
 class FaceDetector:
-    def __init__(self, camera, cascade_path=cv2.data.haarcascades + 'haarcascade_frontalface_default.xml',
-                 frame_rate=5):
-        self.camera = camera
+    def __init__(self, camera_index=0, cascade_path=cv2.data.haarcascades + 'haarcascade_frontalface_default.xml', frame_rate=5):
+        self.camera = cv2.VideoCapture(camera_index)
         self.face_cascade = cv2.CascadeClassifier(cascade_path)
         self.frame_rate = frame_rate
         self.faces = []
         self.faces_lock = threading.Lock()
-        threading.Thread(target=self.detect_faces, daemon=True).start()
 
     def detect_faces(self):
         last_detection_time = 0
         while True:
             current_time = time.time()
             if current_time - last_detection_time >= 1 / self.frame_rate:
-                frame = self.camera.get_frame()
-                if frame is not None:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    detected_faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5,
-                                                                        minSize=(30, 30))
-                    with self.faces_lock:
-                        self.faces = detected_faces if len(detected_faces) > 0 else []
-                    last_detection_time = current_time
-
-    def get_faces(self):
-        with self.faces_lock:
-            return self.faces
+                success, frame = self.camera.read()
+                if not success:
+                    continue
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                detected_faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+                with self.faces_lock:
+                    self.faces = detected_faces if len(detected_faces) > 0 else []
+                last_detection_time = current_time
 
     def generate_frames(self):
         while True:
-            frame = self.camera.get_frame()
-            if frame is None:
-                continue
-            faces = self.get_faces()
-            if faces:
-                for (x, y, w, h) in faces:
+            success, frame = self.camera.read()
+            if not success:
+                break
+            with self.faces_lock:
+                current_faces = self.faces
+            if current_faces:
+                for (x, y, w, h) in current_faces:
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-
 app = Flask(__name__)
 servo_controller = ServoController()
-camera = Camera()
-face_detector = FaceDetector(camera)
-
+face_detector = FaceDetector()
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/move')
 def move():
@@ -109,12 +79,11 @@ def move():
     servo_controller.move_servo(direction)
     return ('', 204)
 
-
 @app.route('/video_feed')
 def video_feed():
     return Response(face_detector.generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
 if __name__ == '__main__':
+    threading.Thread(target=face_detector.detect_faces, daemon=True).start()
     app.run(host='0.0.0.0', port=5000)
