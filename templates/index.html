@@ -62,6 +62,15 @@
             background-color: #0056b3;
         }
 
+        .tracking-mode {
+            background-color: #28a745;
+        }
+
+        .disabled-button {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
         @media (min-width: 768px) {
             button {
                 font-size: 24px;
@@ -81,21 +90,38 @@
         <button id="up-button" onmousedown="startMoving('up')" onmouseup="stopMoving()" ontouchstart="startMoving('up')" ontouchend="stopMoving()">Up</button>
         <div class="horizontal-buttons">
             <button id="left-button" onmousedown="startMoving('left')" onmouseup="stopMoving()" ontouchstart="startMoving('left')" ontouchend="stopMoving()">Left</button>
+            <button id="track-button" onclick="toggleTracking()">Track</button>
             <button id="right-button" onmousedown="startMoving('right')" onmouseup="stopMoving()" ontouchstart="startMoving('right')" ontouchend="stopMoving()">Right</button>
         </div>
         <button id="down-button" onmousedown="startMoving('down')" onmouseup="stopMoving()" ontouchstart="startMoving('down')" ontouchend="stopMoving()">Down</button>
     </div>
     <script>
         let moveInterval;
+        let isTracking = false;
 
         function startMoving(direction) {
-            moveInterval = setInterval(() => {
-                fetch(`/move?direction=${direction}`);
-            }, 100); // Adjust the interval as needed
+            if (!isTracking) {
+                moveInterval = setInterval(() => {
+                    fetch(`/move?direction=${direction}`);
+                }, 100); // Adjust the interval as needed
+            }
         }
 
         function stopMoving() {
             clearInterval(moveInterval);
+        }
+
+        function toggleTracking() {
+            isTracking = !isTracking;
+            const buttons = document.querySelectorAll('.control-buttons button');
+            buttons.forEach(button => {
+                if (button.id !== 'track-button') {
+                    button.classList.toggle('disabled-button', isTracking);
+                }
+            });
+            document.getElementById('track-button').classList.toggle('tracking-mode', isTracking);
+
+            fetch(`/toggle_tracking?enabled=${isTracking}`);
         }
 
         // Ensure that movement stops if the mouse or touch leaves the button
