@@ -1,43 +1,28 @@
 from flask import Flask, render_template, request, Response
-from adafruit_servokit import ServoKit
 import cv2
 import time
 import threading
 import logging
 from collections import deque
+from servo_controller import ServoController
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 
-class ServoController:
+class TrackableServoController(ServoController):
     def __init__(self, channels=16):
-        self.kit = ServoKit(channels=channels)
-        self.horizontal_range = (40, 180)
-        self.vertical_range = (0, 50)
-        self.horizontal_angle = (self.horizontal_range[1] + self.horizontal_range[0]) // 2
-        self.vertical_angle = (self.vertical_range[1] + self.vertical_range[0]) // 2
-        self.horizontal_step = self.horizontal_range[1] // 60
-        self.vertical_step = self.vertical_range[1] // 40
+        super().__init__(channels)
+        self.frame_width = 640  # Assuming a fixed frame width
+        self.frame_height = 480  # Assuming a fixed frame height
+        self.frame_center_x, self.frame_center_y = self.frame_width // 2, self.frame_height // 2
+
         self.is_tracking = False
         self.tracking_tol = 20
         self.tracking_thread = None
         self.stop_tracking_flag = threading.Event()
-        self.face_positions = deque(maxlen=5)  # Store recent face positions for smoothing
 
-    def move_servo(self, direction):
-        if direction == 'up':
-            self.vertical_angle = min(self.vertical_angle + self.vertical_step, self.vertical_range[1])
-            self.kit.servo[1].angle = self.vertical_angle
-        elif direction == 'down':
-            self.vertical_angle = max(self.vertical_angle - self.vertical_step, self.vertical_range[0])
-            self.kit.servo[1].angle = self.vertical_angle
-        elif direction == 'right':
-            self.horizontal_angle = max(self.horizontal_angle - self.horizontal_step, self.horizontal_range[0])
-            self.kit.servo[0].angle = self.horizontal_angle
-        elif direction == 'left':
-            self.horizontal_angle = min(self.horizontal_angle + self.horizontal_step, self.horizontal_range[1])
-            self.kit.servo[0].angle = self.horizontal_angle
+        self.face_positions = deque(maxlen=5)  # Store recent face positions for smoothing
 
     def set_tracking(self, tracking):
         self.is_tracking = tracking
@@ -51,43 +36,44 @@ class ServoController:
                 self.tracking_thread.join()
 
     def tracking_loop(self):
-        frame_width = 640  # Assuming a fixed frame width
-        frame_height = 480  # Assuming a fixed frame height
+
         while not self.stop_tracking_flag.is_set():
             face_x, face_y = face_detector.face_center()
 
             target_x, target_y = self.tracking_face_algorithm(face_x, face_y)
             if target_x is not None and target_y is not None:
-                self.track_face(target_x, target_y, frame_width, frame_height)
+                self.track_face(target_x, target_y)
 
             time.sleep(0.1)  # Adjust the sleep time as needed
 
-    def track_face(self, face_x, face_y, frame_width, frame_height):
+    def track_face(self, face_x, face_y):
         if self.is_tracking:
-            center_x, center_y = frame_width // 2, frame_height // 2
             logging.info(f"Navigating face at x: {face_x}, y: {face_y} to the center x: {center_x}, y: {center_y} ")
 
             # if center is too right(high x value of center), move the camera left
-            if face_x < center_x - self.tracking_tol:
-                self.move_servo('left')
+            if face_x < self.frame_center_x - self.tracking_tol:
+                self.move_servo('left', amplify=0.5)
                 # logging.info(f"> move the camera left")
 
-            elif face_x > center_x + self.tracking_tol:
-                self.move_servo('right')
+            elif face_x > self.frame_center_x + self.tracking_tol:
+                self.move_servo('right', amplify=0.5)
                 # logging.info(f"> move the camera right")
 
             # if center is too high(low y value of center), move the camera down
-            if face_y > center_y + self.tracking_tol:
-                self.move_servo('down')
+            if face_y > self.frame_center_y + self.tracking_tol:
+                self.move_servo('down', amplify=0.5)
                 # logging.info(f"> move the camera down")
 
-            elif face_y < center_y - self.tracking_tol:
-                self.move_servo('up')
+            elif face_y < self.frame_center_y - self.tracking_tol:
+                self.move_servo('up', amplify=0.5)
                 # logging.info(f"> move the camera up")
 
     def tracking_face_algorithm(self, face_x, face_y):
         if face_x is not None and face_y is not None:
             self.face_positions.append((face_x, face_y))
+        else:
+            # do not move if no detection of face
+            self.face_positions.append((self.frame_center_x, self.frame_center_y))
 
         target_x, target_y = None, None
         if len(self.face_positions) > 0:
@@ -163,7 +149,7 @@ class FaceDetector:
 
 
 app = Flask(__name__)
-servo_controller = ServoController()
+servo_controller = TrackableServoController()
 face_detector = FaceDetector()
 
 
