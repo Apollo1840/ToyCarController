@@ -48,7 +48,7 @@ class ServoController:
     def tracking_loop(self):
         while self.is_tracking:
             with face_detector.faces_lock:
-                if face_detector.faces:
+                if len(face_detector.faces)>0:
                     x, y, w, h = face_detector.faces[0]
                     face_x, face_y = x + w // 2, y + h // 2
                     frame_width = 640  # Assuming a fixed frame width
@@ -113,7 +113,6 @@ class FaceDetector:
             if len(current_faces) >= 1:
                 x, y, w, h = current_faces[0]
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-                print(frame.shape)
 
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
