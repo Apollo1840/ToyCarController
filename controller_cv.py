@@ -14,6 +14,8 @@ vertical_angle = vertical_range[1] // 2
 horizontal_step = horizontal_range[1] // 30
 vertical_step = vertical_range[1] // 20
 
+detect_frame_rate = 1
+
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -55,12 +57,12 @@ def generate_frames():
     faces = []
 
     while True:
-        current_time = time.time()
         success, frame = camera.read()
         if not success:
             break
         else:
-            if current_time - last_detection_time >= 0.5:
+            current_time = time.time()
+            if current_time - last_detection_time >= 1/detect_frame_rate:
                 # Update face detection every 0.5 seconds
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, 1.1, 4)
