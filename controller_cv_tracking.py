@@ -40,36 +40,40 @@ class TrackableServoController(ServoController):
         while not self.stop_tracking_flag.is_set():
             face_x, face_y = face_detector.face_center()
 
+            if face_x and face_y:
+                logging.info(
+                    f"{self.__class__}: detected face at x: {face_x}, y: {face_y} ")
+
             target_x, target_y = self.tracking_face_algorithm(face_x, face_y)
             if target_x is not None and target_y is not None:
                 self.track_face(target_x, target_y)
 
-            time.sleep(0.1)  # Adjust the sleep time as needed
+            time.sleep(0.5)  # Adjust the sleep time as needed
 
     def track_face(self, face_x, face_y):
         if self.is_tracking:
             logging.info(
-                f"Navigating face at x: {face_x}, y: {face_y} to the center x: {self.frame_center_x}, y: {self.frame_center_y} ")
+                f"{self.__class__}: Estimate face at x: {int(face_x)}, y: {face_y}")
+            logging.info(
+                f"{self.__class__}: Prepare to move it towards camera center x: {self.frame_center_x}, y: {self.frame_center_y} ")
 
             # if center is too right(high x value of center), move the camera left
             if face_x < self.frame_center_x - self.tracking_tol:
-                self.move_servo('left', amplify=0.5)
-                logging.info(f"> move the camera left")
+                self.move_servo('left', amplify=0.2)
+                logging.info(f"{self.__class__}: Moved the camera left")
 
             elif face_x > self.frame_center_x + self.tracking_tol:
-                self.move_servo('right', amplify=0.5)
-                logging.info(f"> move the camera right")
+                self.move_servo('right', amplify=0.2)
+                logging.info(f"{self.__class__}: Moved the camera right")
 
             # if center is too high(low y value of center), move the camera down
             if face_y > self.frame_center_y + self.tracking_tol:
-                self.move_servo('down', amplify=0.5)
-                logging.info(f"> move the camera down")
+                self.move_servo('down', amplify=0.2)
+                logging.info(f"{self.__class__}: Moved the camera down")
 
             elif face_y < self.frame_center_y - self.tracking_tol:
-                self.move_servo('up', amplify=0.5)
-                logging.info(f"> move the camera up")
-
-            time.sleep(1)
+                self.move_servo('up', amplify=0.2)
+                logging.info(f"{self.__class__}: Moved the camera up")
 
     def tracking_face_algorithm(self, face_x, face_y):
         if face_x is not None and face_y is not None:
@@ -78,7 +82,8 @@ class TrackableServoController(ServoController):
             # do not move if no detection of face
             self.face_positions.append((self.frame_center_x, self.frame_center_y))
 
-        logging.info(f"{self.face_positions}")
+        logging.info(f"{self.__class__}: captured face locations:" + " ".join(
+            [f"({int(fp[0])}, {int(fp[1])})" for fp in self.face_positions]))
 
         target_x, target_y = None, None
         if len(self.face_positions) > 0:
@@ -115,7 +120,7 @@ class FaceDetector:
                 # Log detected faces
                 if len(detected_faces) > 0:
                     for (x, y, w, h) in detected_faces:
-                        logging.info(f"Detected face at x: {x}, y: {y}, width: {w}, height: {h}")
+                        logging.info(f"{self.__class__}: Detected face at x: {x}, y: {y}, width: {w}, height: {h}")
 
                 with self.faces_lock:
                     self.faces = detected_faces
