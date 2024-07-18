@@ -54,20 +54,22 @@ class TrackableServoController(ServoController):
             # if center is too right(high x value of center), move the camera left
             if face_x < self.frame_center_x - self.tracking_tol:
                 self.move_servo('left', amplify=0.5)
-                # logging.info(f"> move the camera left")
+                logging.info(f"> move the camera left")
 
             elif face_x > self.frame_center_x + self.tracking_tol:
                 self.move_servo('right', amplify=0.5)
-                # logging.info(f"> move the camera right")
+                logging.info(f"> move the camera right")
 
             # if center is too high(low y value of center), move the camera down
             if face_y > self.frame_center_y + self.tracking_tol:
                 self.move_servo('down', amplify=0.5)
-                # logging.info(f"> move the camera down")
+                logging.info(f"> move the camera down")
 
             elif face_y < self.frame_center_y - self.tracking_tol:
                 self.move_servo('up', amplify=0.5)
-                # logging.info(f"> move the camera up")
+                logging.info(f"> move the camera up")
+
+            time.sleep(1)
 
     def tracking_face_algorithm(self, face_x, face_y):
         if face_x is not None and face_y is not None:
@@ -75,6 +77,8 @@ class TrackableServoController(ServoController):
         else:
             # do not move if no detection of face
             self.face_positions.append((self.frame_center_x, self.frame_center_y))
+
+        logging.info(f"{self.face_positions}")
 
         target_x, target_y = None, None
         if len(self.face_positions) > 0:
