@@ -3,6 +3,10 @@ from adafruit_servokit import ServoKit
 import cv2
 import time
 import threading
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 
 class ServoController:
@@ -38,6 +42,7 @@ class ServoController:
     def track_face(self, face_x, face_y, frame_width, frame_height):
         if self.is_tracking:
             center_x, center_y = frame_width // 2, frame_height // 2
+            logging.info(f"Navigating face at x: {face_x}, y: {face_y} to the center x: {center_x}, y: {center_y} ")
             if face_x < center_x - self.tracking_tol:
                 self.move_servo('right')
             elif face_x > center_x + self.tracking_tol:
@@ -68,6 +73,12 @@ class FaceDetector:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 detected_faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5,
                                                                     minSize=(30, 30))
+
+                # Log detected faces
+                if len(detected_faces) > 0:
+                    for (x, y, w, h) in detected_faces:
+                        logging.info(f"Detected face at x: {x}, y: {y}, width: {w}, height: {h}")
+
                 with self.faces_lock:
                     self.faces = detected_faces
                 last_detection_time = current_time
