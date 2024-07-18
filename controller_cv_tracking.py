@@ -22,19 +22,18 @@ class ServoController:
         self.tracking_tol = 20
 
     def move_servo(self, direction):
-        if not self.is_tracking:
-            if direction == 'up':
-                self.vertical_angle = min(self.vertical_angle + self.vertical_step, self.vertical_range[1])
-                self.kit.servo[1].angle = self.vertical_angle
-            elif direction == 'down':
-                self.vertical_angle = max(self.vertical_angle - self.vertical_step, self.vertical_range[0])
-                self.kit.servo[1].angle = self.vertical_angle
-            elif direction == 'right':
-                self.horizontal_angle = max(self.horizontal_angle - self.horizontal_step, self.horizontal_range[0])
-                self.kit.servo[0].angle = self.horizontal_angle
-            elif direction == 'left':
-                self.horizontal_angle = min(self.horizontal_angle + self.horizontal_step, self.horizontal_range[1])
-                self.kit.servo[0].angle = self.horizontal_angle
+        if direction == 'up':
+            self.vertical_angle = min(self.vertical_angle + self.vertical_step, self.vertical_range[1])
+            self.kit.servo[1].angle = self.vertical_angle
+        elif direction == 'down':
+            self.vertical_angle = max(self.vertical_angle - self.vertical_step, self.vertical_range[0])
+            self.kit.servo[1].angle = self.vertical_angle
+        elif direction == 'right':
+            self.horizontal_angle = max(self.horizontal_angle - self.horizontal_step, self.horizontal_range[0])
+            self.kit.servo[0].angle = self.horizontal_angle
+        elif direction == 'left':
+            self.horizontal_angle = min(self.horizontal_angle + self.horizontal_step, self.horizontal_range[1])
+            self.kit.servo[0].angle = self.horizontal_angle
 
     def set_tracking(self, tracking):
         self.is_tracking = tracking
@@ -43,10 +42,12 @@ class ServoController:
         if self.is_tracking:
             center_x, center_y = frame_width // 2, frame_height // 2
             logging.info(f"Navigating face at x: {face_x}, y: {face_y} to the center x: {center_x}, y: {center_y} ")
+
             if face_x < center_x - self.tracking_tol:
                 self.move_servo('right')
             elif face_x > center_x + self.tracking_tol:
                 self.move_servo('left')
+
             if face_y < center_y - self.tracking_tol:
                 self.move_servo('up')
             elif face_y > center_y + self.tracking_tol:
