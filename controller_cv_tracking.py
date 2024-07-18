@@ -19,7 +19,7 @@ class TrackableServoController(ServoController):
 
         self.is_tracking = False
         self.tracking_tol = 20
-        self.tracking_speed = 0.25   # recommend: 0.1-1
+        self.tracking_speed = 0.5   # recommend: 0.1-1
         self.tracking_freq = 10      # Hz
         self.tracking_thread = None
         self.stop_tracking_flag = threading.Event()
