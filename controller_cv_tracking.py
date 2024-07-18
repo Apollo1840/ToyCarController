@@ -19,8 +19,8 @@ class TrackableServoController(ServoController):
 
         self.is_tracking = False
         self.tracking_tol = 20
-        self.tracking_speed = 0.5   # recommend: 0.1-1
-        self.tracking_freq = 10      # Hz
+        self.tracking_speed = 0.4  # recommend: 0.1-1
+        self.tracking_freq = 10  # Hz
         self.tracking_thread = None
         self.stop_tracking_flag = threading.Event()
 
@@ -50,7 +50,7 @@ class TrackableServoController(ServoController):
             if target_x is not None and target_y is not None:
                 self.track_face(target_x, target_y)
 
-            time.sleep(1/self.tracking_freq)  # Adjust the sleep time as needed
+            time.sleep(1 / self.tracking_freq)  # Adjust the sleep time as needed
 
     def track_face(self, face_x, face_y):
         if self.is_tracking:
@@ -59,22 +59,30 @@ class TrackableServoController(ServoController):
             logging.info(
                 f"{self.__class__.__name__}: Prepare to move it towards camera center x: {self.frame_center_x}, y: {self.frame_center_y} ")
 
-            # if center is too right(high x value of center), move the camera left
+            # Calculate the distance from the center
+            distance_x = abs(face_x - self.frame_center_x)
+            distance_y = abs(face_y - self.frame_center_y)
+
+            # Calculate damp_factor (approaches 0 when near center, 1 otherwise)
+            max_distance = max(self.frame_center_x, self.frame_center_y)
+            damp_factor = min(1, (distance_x + distance_y) / (2 * self.tracking_tol))
+
+            # If the center is too right (high x value of center), move the camera left
             if face_x < self.frame_center_x - self.tracking_tol:
-                self.move_servo('left', amplify=self.tracking_speed)
+                self.move_servo('left', amplify=self.tracking_speed * damp_factor)
                 logging.info(f"{self.__class__.__name__}: Moved the camera left")
 
             elif face_x > self.frame_center_x + self.tracking_tol:
-                self.move_servo('right', amplify=self.tracking_speed)
+                self.move_servo('right', amplify=self.tracking_speed * damp_factor)
                 logging.info(f"{self.__class__.__name__}: Moved the camera right")
 
-            # if center is too high(low y value of center), move the camera down
+            # If the center is too high (low y value of center), move the camera down
             if face_y > self.frame_center_y + self.tracking_tol:
-                self.move_servo('down', amplify=self.tracking_speed)
+                self.move_servo('down', amplify=self.tracking_speed * damp_factor)
                 logging.info(f"{self.__class__.__name__}: Moved the camera down")
 
             elif face_y < self.frame_center_y - self.tracking_tol:
-                self.move_servo('up', amplify=self.tracking_speed)
+                self.move_servo('up', amplify=self.tracking_speed * damp_factor)
                 logging.info(f"{self.__class__.__name__}: Moved the camera up")
 
     def tracking_face_algorithm(self, face_x, face_y):
@@ -122,7 +130,8 @@ class FaceDetector:
                 # Log detected faces
                 if len(detected_faces) > 0:
                     for (x, y, w, h) in detected_faces:
-                        logging.info(f"{self.__class__.__name__}: Detected face at x: {x}, y: {y}, width: {w}, height: {h}")
+                        logging.info(
+                            f"{self.__class__.__name__}: Detected face at x: {x}, y: {y}, width: {w}, height: {h}")
 
                 with self.faces_lock:
                     self.faces = detected_faces
