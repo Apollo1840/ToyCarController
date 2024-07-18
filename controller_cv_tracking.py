@@ -14,20 +14,38 @@ class ServoController:
         self.vertical_angle = self.vertical_range[1] // 2
         self.horizontal_step = self.horizontal_range[1] // 30
         self.vertical_step = self.vertical_range[1] // 20
+        self.is_tracking = False
+        self.tracking_tol = 20
 
     def move_servo(self, direction):
-        if direction == 'up':
-            self.vertical_angle = min(self.vertical_angle + self.vertical_step, self.vertical_range[1])
-            self.kit.servo[1].angle = self.vertical_angle
-        elif direction == 'down':
-            self.vertical_angle = max(self.vertical_angle - self.vertical_step, self.vertical_range[0])
-            self.kit.servo[1].angle = self.vertical_angle
-        elif direction == 'right':
-            self.horizontal_angle = max(self.horizontal_angle - self.horizontal_step, self.horizontal_range[0])
-            self.kit.servo[0].angle = self.horizontal_angle
-        elif direction == 'left':
-            self.horizontal_angle = min(self.horizontal_angle + self.horizontal_step, self.horizontal_range[1])
-            self.kit.servo[0].angle = self.horizontal_angle
+        if not self.is_tracking:
+            if direction == 'up':
+                self.vertical_angle = min(self.vertical_angle + self.vertical_step, self.vertical_range[1])
+                self.kit.servo[1].angle = self.vertical_angle
+            elif direction == 'down':
+                self.vertical_angle = max(self.vertical_angle - self.vertical_step, self.vertical_range[0])
+                self.kit.servo[1].angle = self.vertical_angle
+            elif direction == 'right':
+                self.horizontal_angle = max(self.horizontal_angle - self.horizontal_step, self.horizontal_range[0])
+                self.kit.servo[0].angle = self.horizontal_angle
+            elif direction == 'left':
+                self.horizontal_angle = min(self.horizontal_angle + self.horizontal_step, self.horizontal_range[1])
+                self.kit.servo[0].angle = self.horizontal_angle
+
+    def set_tracking(self, tracking):
+        self.is_tracking = tracking
+
+    def track_face(self, face_x, face_y, frame_width, frame_height):
+        if self.is_tracking:
+            center_x, center_y = frame_width // 2, frame_height // 2
+            if face_x < center_x - self.tracking_tol:
+                self.move_servo('right')
+            elif face_x > center_x + self.tracking_tol:
+                self.move_servo('left')
+            if face_y < center_y - self.tracking_tol:
+                self.move_servo('up')
+            elif face_y > center_y + self.tracking_tol:
+                self.move_servo('down')
 
 
 class FaceDetector:
@@ -61,8 +79,12 @@ class FaceDetector:
                 break
             with self.faces_lock:
                 current_faces = self.faces
-            for (x, y, w, h) in current_faces:
+
+            if len(current_faces) >= 1:
+                x, y, w, h = current_faces[0]
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                servo_controller.track_face(x + w // 2, y + h // 2, frame.shape[1], frame.shape[0])
+
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
@@ -86,6 +108,13 @@ def move():
     return ('', 204)
 
 
+@app.route('/toggle_tracking')
+def toggle_tracking():
+    enabled = request.args.get('enabled', 'false') == 'true'
+    servo_controller.set_tracking(enabled)
+    return ('', 204)
+
+
 @app.route('/video_feed')
 def video_feed():
     return Response(face_detector.generate_frames(),
@@ -94,4 +123,5 @@ def video_feed():
 
 if __name__ == '__main__':
     threading.Thread(target=face_detector.detect_faces, daemon=True).start()
+
     app.run(host='0.0.0.0', port=5000)
