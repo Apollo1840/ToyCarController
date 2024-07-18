@@ -33,6 +33,47 @@ faces = []
 faces_lock = threading.Lock()
 
 
+def face_detection_loop():
+    global faces
+    last_detection_time = 0
+
+    while True:
+        current_time = time.time()
+        if current_time - last_detection_time >= 1 / detect_frame_rate:
+            success, frame = camera.read()
+            if not success:
+                continue
+
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            detected_faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+            with faces_lock:
+                faces = [detected_faces[0]]
+
+            last_detection_time = current_time
+
+
+def generate_frames():
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+
+        with faces_lock:
+            current_faces = faces
+
+        # for (x, y, w, h) in current_faces:
+        #    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        x, y, w, h = current_faces[0]
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -57,44 +98,6 @@ def move():
         kit.servo[0].angle = horizontal_angle
 
     return ('', 204)  # Return an empty response
-
-
-def face_detection_loop():
-    global faces
-    last_detection_time = 0
-
-    while True:
-        current_time = time.time()
-        if current_time - last_detection_time >= 1 / detect_frame_rate:
-            success, frame = camera.read()
-            if not success:
-                continue
-
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            detected_faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
-            with faces_lock:
-                faces = detected_faces
-
-            last_detection_time = current_time
-
-
-def generate_frames():
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-
-        with faces_lock:
-            current_faces = faces
-
-        for (x, y, w, h) in current_faces:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
 @app.route('/video_feed')
