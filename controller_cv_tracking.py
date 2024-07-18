@@ -70,12 +70,12 @@ class ServoController:
                 self.move_servo('right')
                 logging.info(f"> move the camera right")
 
-            # if center is too high(high y value), move the camera down
-            if face_y < center_y - self.tracking_tol:
+            # if center is too high(low y value), move the camera down
+            if face_y > center_y + self.tracking_tol:
                 self.move_servo('down')
                 logging.info(f"> move the camera down")
 
-            elif face_y > center_y + self.tracking_tol:
+            elif face_y < center_y - self.tracking_tol:
                 self.move_servo('up')
                 logging.info(f"> move the camera up")
 
