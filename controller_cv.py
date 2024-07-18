@@ -15,7 +15,7 @@ vertical_angle = vertical_range[1] // 2
 horizontal_step = horizontal_range[1] // 30
 vertical_step = vertical_range[1] // 20
 
-detect_frame_rate = 2  # Detection frame rate in Hz
+detect_frame_rate = 5  # Detection frame rate in Hz
 
 # Initialize the Flask application
 app = Flask(__name__)
