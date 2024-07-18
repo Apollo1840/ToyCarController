@@ -16,8 +16,8 @@ class ServoController:
         self.vertical_range = (0, 50)
         self.horizontal_angle = self.horizontal_range[1] // 2
         self.vertical_angle = self.vertical_range[1] // 2
-        self.horizontal_step = self.horizontal_range[1] // 30
-        self.vertical_step = self.vertical_range[1] // 20
+        self.horizontal_step = self.horizontal_range[1] // 60
+        self.vertical_step = self.vertical_range[1] // 40
         self.is_tracking = False
         self.tracking_tol = 20
         self.tracking_thread = None
@@ -54,7 +54,7 @@ class ServoController:
                     frame_width = 640  # Assuming a fixed frame width
                     frame_height = 480  # Assuming a fixed frame height
                     self.track_face(face_x, face_y, frame_width, frame_height)
-            time.sleep(0.1)  # Adjust the sleep time as needed
+            time.sleep(0.2)  # Adjust the sleep time as needed
 
     def track_face(self, face_x, face_y, frame_width, frame_height):
         if self.is_tracking:
@@ -62,14 +62,14 @@ class ServoController:
             logging.info(f"Navigating face at x: {face_x}, y: {face_y} to the center x: {center_x}, y: {center_y} ")
 
             if face_x < center_x - self.tracking_tol:
-                self.move_servo('right')
-            elif face_x > center_x + self.tracking_tol:
                 self.move_servo('left')
+            elif face_x > center_x + self.tracking_tol:
+                self.move_servo('right')
 
             if face_y < center_y - self.tracking_tol:
-                self.move_servo('up')
-            elif face_y > center_y + self.tracking_tol:
                 self.move_servo('down')
+            elif face_y > center_y + self.tracking_tol:
+                self.move_servo('up')
 
 
 class FaceDetector:
