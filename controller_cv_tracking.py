@@ -51,7 +51,7 @@ class FaceDetector:
                 detected_faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5,
                                                                     minSize=(30, 30))
                 with self.faces_lock:
-                    self.faces = detected_faces if len(detected_faces) > 0 else []
+                    self.faces = detected_faces
                 last_detection_time = current_time
 
     def generate_frames(self):
@@ -61,9 +61,8 @@ class FaceDetector:
                 break
             with self.faces_lock:
                 current_faces = self.faces
-            if current_faces:
-                for (x, y, w, h) in current_faces:
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            for (x, y, w, h) in current_faces:
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
