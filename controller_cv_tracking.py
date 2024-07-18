@@ -64,25 +64,32 @@ class TrackableServoController(ServoController):
             distance_y = abs(face_y - self.frame_center_y)
 
             # Calculate damp_factor (approaches 0 when near center, 1 otherwise)
-            max_distance = max(self.frame_center_x, self.frame_center_y)
-            damp_factor = min(1, (distance_x + distance_y) / (2 * self.tracking_tol))
+            damp_factor_x = min(1, distance_x / (3 * self.tracking_tol))
+            damp_factor_y = min(1, distance_y / (3 * self.tracking_tol))
+
+            if damp_factor_x < 1:
+                logging.info(
+                    f"{self.__class__.__name__}: horizontal close, damp factor: {damp_factor_x}")
+            if damp_factor_y < 1:
+                logging.info(
+                    f"{self.__class__.__name__}: vertical close, damp factor: {damp_factor_y}")
 
             # If the center is too right (high x value of center), move the camera left
             if face_x < self.frame_center_x - self.tracking_tol:
-                self.move_servo('left', amplify=self.tracking_speed * damp_factor)
+                self.move_servo('left', amplify=self.tracking_speed * damp_factor_x)
                 logging.info(f"{self.__class__.__name__}: Moved the camera left")
 
             elif face_x > self.frame_center_x + self.tracking_tol:
-                self.move_servo('right', amplify=self.tracking_speed * damp_factor)
+                self.move_servo('right', amplify=self.tracking_speed * damp_factor_x)
                 logging.info(f"{self.__class__.__name__}: Moved the camera right")
 
             # If the center is too high (low y value of center), move the camera down
             if face_y > self.frame_center_y + self.tracking_tol:
-                self.move_servo('down', amplify=self.tracking_speed * damp_factor)
+                self.move_servo('down', amplify=self.tracking_speed * damp_factor_y)
                 logging.info(f"{self.__class__.__name__}: Moved the camera down")
 
             elif face_y < self.frame_center_y - self.tracking_tol:
-                self.move_servo('up', amplify=self.tracking_speed * damp_factor)
+                self.move_servo('up', amplify=self.tracking_speed * damp_factor_y)
                 logging.info(f"{self.__class__.__name__}: Moved the camera up")
 
     def tracking_face_algorithm(self, face_x, face_y):
