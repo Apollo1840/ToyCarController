@@ -1,23 +1,15 @@
-from flask import Flask, render_template, request, Response
-from adafruit_servokit import ServoKit
-import cv2
+# external pkg
+import threading
+from flask import Flask, render_template, request, Response, jsonify
 
-# Initialize the ServoKit for 16 channels
-kit = ServoKit(channels=16)
+# internal pkg
+from servo_controller_cv import FaceDetector, TrackableServoController
+from motor_controller import MotorController
 
-# Initial positions for servos
-horizontal_range = (40, 180)
-vertical_range = (0, 50)
-horizontal_angle = horizontal_range[1] // 2
-vertical_angle = vertical_range[1] // 2
-horizontal_step = horizontal_range[1] // 30
-vertical_step = vertical_range[1] // 20
-
-# Initialize the Flask application
 app = Flask(__name__)
-
-# Open the video capture (assuming the USB camera is at /dev/video0)
-camera = cv2.VideoCapture(0)
+face_detector = FaceDetector()
+servo_controller = TrackableServoController(face_detector)
+motor_controller = MotorController()
 
 
 @app.route('/')
@@ -25,44 +17,53 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/move')
-def move():
-    global horizontal_angle, vertical_angle
+@app.route('/move_car')
+def move_car():
     direction = request.args.get('direction')
-
-    if direction == 'up':
-        vertical_angle = min(vertical_angle + vertical_step, vertical_range[1])
-        kit.servo[1].angle = vertical_angle
-    elif direction == 'down':
-        vertical_angle = max(vertical_angle - vertical_step, vertical_range[0])
-        kit.servo[1].angle = vertical_angle
-    elif direction == 'right':
-        horizontal_angle = max(horizontal_angle - horizontal_step, horizontal_range[0])
-        kit.servo[0].angle = horizontal_angle
-    elif direction == 'left':
-        horizontal_angle = min(horizontal_angle + horizontal_step, horizontal_range[1])
-        kit.servo[0].angle = horizontal_angle
-
-    return ('', 204)  # Return an empty response
+    motor_controller.move(direction)
+    return ('', 204)
 
 
-def generate_frames():
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+@app.route('/stop_move_car')
+def stop_move_car():
+    motor_controller.stop()
+    return ('', 204)
+
+
+@app.route('/recenter_car')
+def recenter_car():
+    motor_controller.recenter()
+    # Response for when the recenter process starts
+    return jsonify(status='recenter_started')
+
+
+@app.route('/stop_recenter')
+def stop_recenter():
+    motor_controller.stop_recenter()
+    # Response for when the recenter process stops
+    return jsonify(status='recenter_stopped')
+
+
+@app.route('/move_camera')
+def move_camera():
+    direction = request.args.get('direction')
+    servo_controller.move_servo(direction)
+    return ('', 204)
+
+
+@app.route('/toggle_tracking')
+def toggle_tracking():
+    enabled = request.args.get('enabled', 'false') == 'true'
+    servo_controller.set_tracking(enabled)
+    return ('', 204)
 
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(),
+    return Response(face_detector.generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 if __name__ == '__main__':
+    threading.Thread(target=face_detector.detect_faces, daemon=True).start()
     app.run(host='0.0.0.0', port=5000)
