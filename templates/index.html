@@ -7,31 +7,55 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Camera Stream</h1>
-    <div class="video-container">
-        <img src="/video_feed" alt="Camera Stream">
-    </div>
-    <div class="control-panel">
-        <div class="car-control-buttons">
-            <button id="forward-button" onmousedown="startMovingCar('forward')" onmouseup="stopMovingCar()" onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('forward')" ontouchend="stopMovingCar()">Forward</button>
-            <div class="horizontal-buttons">
-                <button id="left-button" onmousedown="startMovingCar('left')" onmouseup="stopMovingCar()" onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('left')" ontouchend="stopMovingCar()">Left</button>
-                <button id="recenter-button" onclick="toggleRecenter()">Recenter</button>
-                <button id="right-button" onmousedown="startMovingCar('right')" onmouseup="stopMovingCar()" onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('right')" ontouchend="stopMovingCar()">Right</button>
-            </div>
-            <button id="backward-button" onmousedown="startMovingCar('backward')" onmouseup="stopMovingCar()" onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('backward')" ontouchend="stopMovingCar()">Backward</button>
+<h1>Camera Stream</h1>
+<div class="video-container">
+    <img src="/video_feed" alt="Camera Stream">
+</div>
+<div class="control-panel">
+    <div class="car-control-buttons">
+        <button id="forward-button" onmousedown="startMovingCar('forward')" onmouseup="stopMovingCar()"
+                onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('forward')" ontouchend="stopMovingCar()">
+            Forward
+        </button>
+        <div class="horizontal-buttons">
+            <button id="left-button" onmousedown="startMovingCar('left')" onmouseup="stopMovingCar()"
+                    onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('left')" ontouchend="stopMovingCar()">
+                Left
+            </button>
+            <button id="recenter-button" onclick="toggleRecenter()">Recenter</button>
+            <button id="right-button" onmousedown="startMovingCar('right')" onmouseup="stopMovingCar()"
+                    onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('right')" ontouchend="stopMovingCar()">
+                Right
+            </button>
         </div>
-        <div class="camera-control-buttons">
-            <button id="up-button" onmousedown="startMovingCamera('up')" onmouseup="stopMovingCamera()" onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('up')" ontouchend="stopMovingCamera()">Up</button>
-            <div class="horizontal-camera-buttons">
-                <button id="left-camera-button" onmousedown="startMovingCamera('left')" onmouseup="stopMovingCamera()" onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('left')" ontouchend="stopMovingCamera()">Left</button>
-                <button id="track-button" onclick="toggleTracking()">Track</button>
-                <button id="right-camera-button" onmousedown="startMovingCamera('right')" onmouseup="stopMovingCamera()" onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('right')" ontouchend="stopMovingCamera()">Right</button>
-            </div>
-            <button id="down-button" onmousedown="startMovingCamera('down')" onmouseup="stopMovingCamera()" onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('down')" ontouchend="stopMovingCamera()">Down</button>
-        </div>
+        <button id="backward-button" onmousedown="startMovingCar('backward')" onmouseup="stopMovingCar()"
+                onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('backward')" ontouchend="stopMovingCar()">
+            Backward
+        </button>
     </div>
-    <script>
+    <div class="camera-control-buttons">
+        <button id="up-button" onmousedown="startMovingCamera('up')" onmouseup="stopMovingCamera()"
+                onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('up')"
+                ontouchend="stopMovingCamera()">Up
+        </button>
+        <div class="horizontal-camera-buttons">
+            <button id="left-camera-button" onmousedown="startMovingCamera('left')" onmouseup="stopMovingCamera()"
+                    onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('left')"
+                    ontouchend="stopMovingCamera()">Left
+            </button>
+            <button id="track-button" onclick="toggleTracking()">Track</button>
+            <button id="right-camera-button" onmousedown="startMovingCamera('right')" onmouseup="stopMovingCamera()"
+                    onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('right')"
+                    ontouchend="stopMovingCamera()">Right
+            </button>
+        </div>
+        <button id="down-button" onmousedown="startMovingCamera('down')" onmouseup="stopMovingCamera()"
+                onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('down')"
+                ontouchend="stopMovingCamera()">Down
+        </button>
+    </div>
+</div>
+<script>
         let moveCarInterval;
         let moveCameraInterval;
         let isTracking = false;
@@ -130,6 +154,8 @@
                 stopMovingCamera();
             };
         });
-    </script>
+
+
+</script>
 </body>
 </html>
