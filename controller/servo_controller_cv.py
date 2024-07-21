@@ -3,7 +3,7 @@ import time
 import threading
 import logging
 from collections import deque
-from servo_controller import ServoController
+from .servo_controller import ServoController
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

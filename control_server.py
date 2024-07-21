@@ -3,8 +3,8 @@ import threading
 from flask import Flask, render_template, request, Response, jsonify
 
 # internal pkg
-from servo_controller_cv import FaceDetector, TrackableServoController
-from motor_controller import MotorController
+from controller.servo_controller_cv import FaceDetector, TrackableServoController
+from controller.motor_controller import MotorController
 
 app = Flask(__name__)
 face_detector = FaceDetector()

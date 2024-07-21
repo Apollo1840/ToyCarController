@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, Response
 import threading
 import logging
-from servo_controller_cv import FaceDetector, TrackableServoController
+from controller.servo_controller_cv import FaceDetector, TrackableServoController
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

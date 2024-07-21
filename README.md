@@ -162,7 +162,7 @@ and a working space with wifi access.
    ```bash
    source toy_car_controller/bin/activate
    cd ToyCarController
-   python controller.py
+   python control_server.py
    ```
 
 2) Run Program:

@@ -53,6 +53,8 @@ class MotorController:
         self.enable_motors()
 
     def _recenter_motors(self):
+        # PlaceHolder
+
         # Logic to recenter the motors
         logging.info("Recentering motors...")
         # Move motors to a specific position for recentering
