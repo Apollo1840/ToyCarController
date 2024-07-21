@@ -12,7 +12,9 @@ kit = MotorKit(i2c=i2c)
 
 # Function to run the motor at a specified throttle for a certain duration
 def run_motor(motor, throttle, duration):
-    motor.throttle = throttle
+    for t in range(0, throttle, 0.1):
+        motor.throttle = t
+        sleep(0.1)
     print(f"Motor running at throttle {throttle} for {duration} seconds")
     sleep(duration)
     motor.throttle = 0
