@@ -67,6 +67,13 @@ class MotorController:
         self.kit.motor3.throttle = 0
         self.kit.motor4.throttle = 0
 
+        self.current_throttle = {
+            "motor1": 0,
+            "motor2": 0,
+            "motor3": 0,
+            "motor4": 0
+        }
+
     def recenter(self):
         if not self.is_recentering:
             self.is_recentering = True

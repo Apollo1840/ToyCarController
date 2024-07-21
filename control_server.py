@@ -30,6 +30,7 @@ def stop_move_car():
     return ('', 204)
 
 
+"""
 @app.route('/recenter_car')
 def recenter_car():
     motor_controller.recenter()
@@ -42,6 +43,8 @@ def stop_recenter():
     motor_controller.stop_recenter()
     # Response for when the recenter process stops
     return jsonify(status='recenter_stopped')
+
+"""
 
 
 @app.route('/move_camera')
