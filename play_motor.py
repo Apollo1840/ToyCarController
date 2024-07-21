@@ -1,0 +1,38 @@
+import board
+import busio
+from time import sleep
+from adafruit_motorkit import MotorKit
+
+# Initialize I2C bus and MotorKit
+i2c = busio.I2C(board.SCL, board.SDA)
+print("Devices found on I2C bus: ", i2c.scan())
+
+kit = MotorKit(i2c=i2c)
+
+
+# Function to run the motor at a specified throttle for a certain duration
+def run_motor(motor, throttle, duration):
+    motor.throttle = throttle
+    print(f"Motor running at throttle {throttle} for {duration} seconds")
+    sleep(duration)
+    motor.throttle = 0
+    print("Motor stopped")
+
+
+# Main loop to run motors with different throttles and durations
+while True:
+    # Run motor 1 forward and backward
+    run_motor(kit.motor1, 1.0, 3)
+    run_motor(kit.motor1, -1.0, 3)
+
+    # Run motor 2 forward and backward
+    run_motor(kit.motor2, 1.0, 3)
+    run_motor(kit.motor2, -1.0, 3)
+
+    # Run motor 3 forward and backward
+    run_motor(kit.motor3, 1.0, 3)
+    run_motor(kit.motor3, -1.0, 3)
+
+    # Run motor 4 forward and backward
+    run_motor(kit.motor4, 1.0, 3)
+    run_motor(kit.motor4, -1.0, 3)
