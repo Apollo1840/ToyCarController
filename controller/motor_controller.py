@@ -37,8 +37,8 @@ class MotorController:
             self._gradual_throttle_change(target_throttle)
 
     def _gradual_throttle_change(self, target_throttle):
-        step = 0.1
-        max_steps = int(1 / step)
+        step = 0.05
+        max_steps = int(2 / step)
         for _ in range(max_steps):
             all_reached = True
             for motor, target in target_throttle.items():
