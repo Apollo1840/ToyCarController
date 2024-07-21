@@ -16,7 +16,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/move')
+@app.route('/move_camera')
 def move():
     direction = request.args.get('direction')
     servo_controller.move_servo(direction)
