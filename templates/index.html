@@ -3,102 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servo Control</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-        }
-
-        h1 {
-            margin: 20px 0;
-            font-size: 24px;
-        }
-
-        .video-container {
-            width: 100%;
-            max-width: 640px;
-            padding: 10px;
-        }
-
-        img {
-            width: 100%;
-            height: auto;
-            border: 2px solid #007BFF;
-            border-radius: 10px;
-        }
-
-        .control-panel {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            max-width: 640px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .control-buttons, .camera-control-buttons {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .horizontal-buttons, .horizontal-camera-buttons {
-            display: flex;
-            justify-content: center;
-            margin: 10px 0;
-        }
-
-        button {
-            font-size: 18px;
-            margin: 5px;
-            padding: 15px;
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
-            border: none;
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-        }
-
-        button:active {
-            background-color: #0056b3;
-        }
-
-        .tracking-mode {
-            background-color: #28a745;
-        }
-
-        .disabled-button {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-
-        .recenter-mode {
-            background-color: #ffc107;
-        }
-
-        @media (min-width: 768px) {
-            button {
-                font-size: 24px;
-                width: 100px;
-                height: 100px;
-            }
-        }
-    </style>
+    <title>Remote Controllable Car</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>USB Camera Stream</h1>
+    <h1>Camera Stream</h1>
     <div class="video-container">
         <img src="/video_feed" alt="Camera Stream">
     </div>
     <div class="control-panel">
-        <div class="control-buttons">
+        <div class="car-control-buttons">
             <button id="forward-button" onmousedown="startMovingCar('forward')" onmouseup="stopMovingCar()" onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('forward')" ontouchend="stopMovingCar()">Forward</button>
             <div class="horizontal-buttons">
                 <button id="left-button" onmousedown="startMovingCar('left')" onmouseup="stopMovingCar()" onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('left')" ontouchend="stopMovingCar()">Left</button>
