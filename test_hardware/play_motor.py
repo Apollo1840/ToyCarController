@@ -43,3 +43,9 @@ if __name__ == "__main__":
     # Run motor 4 forward and backward
     run_motor(kit.motor4, 1.0, 3)
     run_motor(kit.motor4, -1.0, 3)
+
+    print("end")
+    kit.motor1.throttle = 0
+    kit.motor2.throttle = 0
+    kit.motor3.throttle = 0
+    kit.motor4.throttle = 0
