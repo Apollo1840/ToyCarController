@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.obiscr.chatgpt.settings.EasyCodeState">
+    <option name="projectFiles" value="$PROJECT_DIR$/controller/__init__.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/controller/motor_controller.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/controller/servo_controller.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/controller/servo_controller_cv.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/static/styles.css;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/templates/index.html;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/test_hardware/play_camera.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/test_hardware/play_motor.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/test_hardware/play_stepper.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/control_server.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/control_server_basic.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/control_server_cv.py;/home/congyu/congyu_program/pythons/inits/p_toy_car_controller/README.md" />
+  </component>
+</project>
