@@ -1,4 +1,3 @@
-from flask import Flask, render_template, request, Response
 import cv2
 import time
 import threading
@@ -11,8 +10,9 @@ logging.basicConfig(level=logging.INFO)
 
 
 class TrackableServoController(ServoController):
-    def __init__(self, channels=16):
+    def __init__(self, face_detector, channels=16):
         super().__init__(channels)
+        self.face_detector = face_detector
         self.frame_width = 640  # Assuming a fixed frame width
         self.frame_height = 480  # Assuming a fixed frame height
         self.frame_center_x, self.frame_center_y = self.frame_width // 2, self.frame_height // 2
@@ -40,7 +40,7 @@ class TrackableServoController(ServoController):
     def tracking_loop(self):
 
         while not self.stop_tracking_flag.is_set():
-            face_x, face_y = face_detector.face_center()
+            face_x, face_y = self.face_detector.face_center()
 
             if face_x and face_y:
                 logging.info(
@@ -174,38 +174,3 @@ class FaceDetector:
                 x, y, w, h = self.faces[0]
                 ul, lr = (x, y), (x + w, y + h)
         return ul, lr
-
-
-app = Flask(__name__)
-servo_controller = TrackableServoController()
-face_detector = FaceDetector()
-
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/move')
-def move():
-    direction = request.args.get('direction')
-    servo_controller.move_servo(direction)
-    return ('', 204)
-
-
-@app.route('/toggle_tracking')
-def toggle_tracking():
-    enabled = request.args.get('enabled', 'false') == 'true'
-    servo_controller.set_tracking(enabled)
-    return ('', 204)
-
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(face_detector.generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-if __name__ == '__main__':
-    threading.Thread(target=face_detector.detect_faces, daemon=True).start()
-    app.run(host='0.0.0.0', port=5000)
