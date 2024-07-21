@@ -52,7 +52,8 @@ class MotorController:
                     time.sleep(0.1)
 
     def _set_motor_throttle(self, motor, throttle):
-        setattr(self.kit, motor).throttle = throttle
+        motor_obj = getattr(self.kit, motor)
+        motor_obj.throttle = throttle
         self.current_throttle[motor] = throttle
         print(f"{motor} throttle set to {throttle}")
 
