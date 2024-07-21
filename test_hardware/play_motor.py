@@ -1,5 +1,6 @@
 import board
 import busio
+import numpy as np
 from time import sleep
 from adafruit_motorkit import MotorKit
 
@@ -12,7 +13,7 @@ kit = MotorKit(i2c=i2c)
 
 # Function to run the motor at a specified throttle for a certain duration
 def run_motor(motor, throttle, duration):
-    for t in range(0, throttle, 0.1):
+    for t in np.arange(0, throttle, 0.1):
         motor.throttle = t
         sleep(0.1)
     print(f"Motor running at throttle {throttle} for {duration} seconds")
