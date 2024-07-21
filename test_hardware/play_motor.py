@@ -25,8 +25,8 @@ if __name__ == "__main__":
     kit.motor3.throttle = 0
     kit.motor4.throttle = 0
 
-    print("prepare to run (5 seconds)")
-    sleep(5)
+    print("prepare to run (3 seconds)")
+    sleep(3)
 
     # Run motor 1 forward and backward
     run_motor(kit.motor1, 1.0, 3)

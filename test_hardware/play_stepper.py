@@ -7,8 +7,10 @@ i2c = busio.I2C(board.SCL, board.SDA)
 print("find device on: ", i2c.scan())
 
 kit = ServoKit(channels=16)
+kit.servo[0].angle = 0
 kit.servo[1].angle = 0
-sleep(1)
+print("prepare for 3 seconds ....")
+sleep(3)
 
 while True:
     for angle in range(0, 60, 10):
