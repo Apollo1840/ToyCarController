@@ -35,6 +35,8 @@ class MotorController:
                 target_throttle = {"motor1": 0.5, "motor2": -0.5, "motor3": 0.5, "motor4": -0.5}
 
             self._gradual_throttle_change(target_throttle)
+            time.sleep(0.5)
+            self.stop()
 
     def _gradual_throttle_change(self, target_throttle):
         step = 0.05
