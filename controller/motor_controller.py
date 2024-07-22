@@ -59,6 +59,7 @@ class MotorController:
                 break
             if self.stopping:
                 self.stop()
+                break
             time.sleep(0.1)
 
     def _set_motor_throttle(self, motor, throttle):
