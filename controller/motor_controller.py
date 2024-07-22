@@ -18,14 +18,14 @@ class MotorController:
                          "motor2": -1.0 * self.speed,
                          "motor3": 1.0 * self.speed,
                          "motor4": -1.0 * self.speed},
-            "left": {"motor1": -1.0 * self.speed,
-                     "motor2": 1.0 * self.speed,
-                     "motor3": 1.0 * self.speed,
-                     "motor4": -1.0 * self.speed},
-            "right": {"motor1": 1.0 * self.speed,
-                      "motor2": -1.0 * self.speed,
-                      "motor3": -1.0 * self.speed,
-                      "motor4": 1.0 * self.speed}
+            "left": {"motor1": 1.0 * self.speed,
+                     "motor2": -1.0 * self.speed,
+                     "motor3": -1.0 * self.speed,
+                     "motor4": 1.0 * self.speed},
+            "right": {"motor1": -1.0 * self.speed,
+                      "motor2": 1.0 * self.speed,
+                      "motor3": 1.0 * self.speed,
+                      "motor4": -1.0 * self.speed}
         }
 
         self.is_recentering = False
