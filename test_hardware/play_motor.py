@@ -1,7 +1,7 @@
 import board
 import busio
 import numpy as np
-from time import sleep
+import time
 from adafruit_motorkit import MotorKit
 
 # Initialize I2C bus and MotorKit
@@ -23,7 +23,7 @@ def run_motor(motor, target_throttle, duration):
     motor.throttle = target_throttle
     print(f"Motor running at throttle {target_throttle} for {duration} seconds")
     time.sleep(duration)
-    
+
     motor.throttle = 0
     print("Motor stopped")
 
