@@ -43,7 +43,7 @@ class MotorController:
         # max_steps = int(2 / step)
         # for _ in range(max_steps):
         #     all_reached = True
-        for motor, arget in target_throttle.items():
+        for motor, target in target_throttle.items():
             current = self.current_throttle[motor]
             if abs(target - current) > step:
                 all_reached = False
