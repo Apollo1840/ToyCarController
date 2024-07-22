@@ -23,11 +23,7 @@ def run_motor(motor, target_throttle, duration):
     motor.throttle = target_throttle
     print(f"Motor running at throttle {target_throttle} for {duration} seconds")
     time.sleep(duration)
-
-    for t in np.arange(target_throttle, 0, -step):
-        motor.throttle = t
-        time.sleep(0.1)
-
+    
     motor.throttle = 0
     print("Motor stopped")
 
