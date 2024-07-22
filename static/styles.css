@@ -32,6 +32,7 @@ img {
     max-width: 640px;
     padding: 20px;
     box-sizing: border-box;
+    flex-wrap: wrap; /* Allow wrapping */
 }
 
 .car-control-panel, .camera-control-panel {
@@ -83,14 +84,23 @@ button i {
 
 @media (max-width: 768px) {
     .control-panels {
-        flex-direction: column;
-        align-items: center;
+        flex-direction: row; /* Ensure panels are side by side */
+        flex-wrap: nowrap; /* Prevent wrapping */
+        justify-content: space-around; /* Space panels evenly */
     }
 
     .car-control-panel, .camera-control-panel {
-        width: 100%;
+        width: 45%;
         margin-bottom: 20px;
     }
 
     button {
-        font-size:
+        font-size: 14px;
+        width: 50px;
+        height: 50px;
+    }
+
+    button i {
+        font-size: 16px;
+    }
+}
