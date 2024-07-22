@@ -90,23 +90,23 @@
         socket.emit('recenter_command', {action: 'stop'});
     }
 
+    // Logic to control the movement of the camera
     function startMovingCamera(direction) {
         if (!isTracking) {
-            socket.emit('move_command', {direction: direction, action: 'start'});
+            fetch(`/move_camera?direction=${direction}`);
             moveCameraInterval = setInterval(() => {
-                socket.emit('move_command', {direction: direction, action: 'start'});
-            }, 100);
+                fetch(`/move_camera?direction=${direction}`);
+            }, 100); // Adjust the interval as needed
         }
     }
 
     function stopMovingCamera() {
         clearInterval(moveCameraInterval);
-        socket.emit('move_command', {action: 'stop'});
     }
 
     function toggleTracking() {
         isTracking = !isTracking;
-        const buttons = document.querySelectorAll('.camera-control-panel button');
+        const buttons = document.querySelectorAll('.camera-control-buttons button');
         buttons.forEach(button => {
             if (button.id !== 'track-button') {
                 button.classList.toggle('disabled-button', isTracking);
@@ -114,9 +114,11 @@
             }
         });
         document.getElementById('track-button').classList.toggle('tracking-mode', isTracking);
-        socket.emit('toggle_tracking', {enabled: isTracking});
+
+        fetch(`/toggle_tracking?enabled=${isTracking}`);
     }
 
+    // Ensure that movement stops if the mouse or touch leaves the button
     document.querySelectorAll('button').forEach(button => {
         button.onmouseleave = () => {
             stopMovingCar();
