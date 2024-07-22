@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote Controllable Car</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
 </head>
 <body>
 <h1>Camera Stream</h1>
@@ -22,7 +23,7 @@
                     onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('left')" ontouchend="stopMovingCar()">
                 Left
             </button>
-            <button id="recenter-button" onclick="toggleRecenter()">Recenter</button>
+            <button id="recenter-button" onmousedown="startRecenter()" onmouseup="stopRecenter()">Recenter</button>
             <button id="right-button" onmousedown="startMovingCar('right')" onmouseup="stopMovingCar()"
                     onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('right')" ontouchend="stopMovingCar()">
                 Right
@@ -60,20 +61,14 @@
         let moveCameraInterval;
         let isTracking = false;
         let isRecentering = false;
+        var socket = io();
 
-        // Logic to control the movement of the car
         function startMovingCar(direction) {
-            if (!isRecentering) {
-                fetch(`/move_car?direction=${direction}`);
-                moveCarInterval = setInterval(() => {
-                    fetch(`/move_car?direction=${direction}`);
-                }, 100); // Adjust the interval as needed
-            }
+            socket.emit('move_command', {direction: direction, action: 'start'});
         }
 
         function stopMovingCar() {
-            clearInterval(moveCarInterval);
-            fetch(`/stop_move_car`);
+            socket.emit('move_command', {action: 'stop'});
         }
 
         function toggleRecenter() {

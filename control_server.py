@@ -5,11 +5,14 @@ from flask import Flask, render_template, request, Response, jsonify
 # internal pkg
 from controller.servo_controller_cv import FaceDetector, TrackableServoController
 from controller.motor_controller import MotorController
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 face_detector = FaceDetector()
 servo_controller = TrackableServoController(face_detector)
 motor_controller = MotorController()
+app.config['SECRET_KEY'] = 'secret!'
 
 
 @app.route('/')
@@ -17,18 +20,14 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/move_car')
-def move_car():
-    direction = request.args.get('direction')
-    motor_controller.move(direction)
-    return ('', 204)
-
-
-@app.route('/stop_move_car')
-def stop_move_car():
-    motor_controller.stop()
-    return ('', 204)
-
+@socketio.on('move_command')
+def handle_move_command(json):
+    action = json.get('action')
+    if action == 'start':
+        direction = json.get('direction')
+        motor_controller.move(direction)
+    elif action == 'stop':
+        motor_controller.stop()
 
 """
 @app.route('/recenter_car')
