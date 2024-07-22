@@ -40,22 +40,22 @@ class MotorController:
 
     def _gradual_throttle_change(self, target_throttle):
         step = 0.05
-        # max_steps = int(2 / step)
-        # for _ in range(max_steps):
-        #     all_reached = True
-        for motor, target in target_throttle.items():
-            current = self.current_throttle[motor]
-            if abs(target - current) > step:
-                # all_reached = False
-                if target > current:
-                    current = min(current + step, target)
-                elif target < current:
-                    current = max(current - step, target)
-                print(f"motor: {motor}, target: {target}, current: {current}")
-                self._set_motor_throttle(motor, current)
-         #    if all_reached:
-         #       break
-        time.sleep(0.1)
+        max_steps = int(2 / step)
+        for _ in range(max_steps):
+            all_reached = True
+            for motor, target in target_throttle.items():
+                current = self.current_throttle[motor]
+                if abs(target - current) > step:
+                    all_reached = False
+                    if target > current:
+                        current = min(current + step, target)
+                    elif target < current:
+                        current = max(current - step, target)
+                    print(f"motor: {motor}, target: {target}, current: {current}")
+                    self._set_motor_throttle(motor, current)
+            if all_reached:
+                break
+            time.sleep(0.1)
 
     def _set_motor_throttle(self, motor, throttle):
         motor_obj = getattr(self.kit, motor)
