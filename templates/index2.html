@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Controllable Car</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body>
+<h1>Camera Stream</h1>
+<div class="video-container">
+    <img src="/video_feed" alt="Camera Stream">
+</div>
+<div class="control-panel">
+    <div class="car-control-buttons">
+        <button id="forward-button" onmousedown="startMovingCar('forward')" onmouseup="stopMovingCar()"
+                onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('forward')" ontouchend="stopMovingCar()">
+            Forward
+        </button>
+        <div class="horizontal-buttons">
+            <button id="left-button" onmousedown="startMovingCar('left')" onmouseup="stopMovingCar()"
+                    onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('left')" ontouchend="stopMovingCar()">
+                Left
+            </button>
+            <button id="recenter-button" onmousedown="startRecenter()" onmouseup="stopRecenter()">Recenter</button>
+            <button id="right-button" onmousedown="startMovingCar('right')" onmouseup="stopMovingCar()"
+                    onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('right')" ontouchend="stopMovingCar()">
+                Right
+            </button>
+        </div>
+        <button id="backward-button" onmousedown="startMovingCar('backward')" onmouseup="stopMovingCar()"
+                onmouseleave="stopMovingCar()" ontouchstart="startMovingCar('backward')" ontouchend="stopMovingCar()">
+            Backward
+        </button>
+    </div>
+    <div class="camera-control-buttons">
+        <button id="up-button" onmousedown="startMovingCamera('up')" onmouseup="stopMovingCamera()"
+                onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('up')"
+                ontouchend="stopMovingCamera()">Up
+        </button>
+        <div class="horizontal-camera-buttons">
+            <button id="left-camera-button" onmousedown="startMovingCamera('left')" onmouseup="stopMovingCamera()"
+                    onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('left')"
+                    ontouchend="stopMovingCamera()">Left
+            </button>
+            <button id="track-button" onclick="toggleTracking()">Track</button>
+            <button id="right-camera-button" onmousedown="startMovingCamera('right')" onmouseup="stopMovingCamera()"
+                    onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('right')"
+                    ontouchend="stopMovingCamera()">Right
+            </button>
+        </div>
+        <button id="down-button" onmousedown="startMovingCamera('down')" onmouseup="stopMovingCamera()"
+                onmouseleave="stopMovingCamera()" ontouchstart="startMovingCamera('down')"
+                ontouchend="stopMovingCamera()">Down
+        </button>
+    </div>
+</div>
+<script>
+        let moveCarInterval;
+        let moveCameraInterval;
+        let isTracking = false;
+        let isRecentering = false;
+        var socket = io();
+
+        function startMovingCar(direction) {
+            socket.emit('move_command', {direction: direction, action: 'start'});
+        }
+
+        function stopMovingCar() {
+            socket.emit('move_command', {action: 'stop'});
+        }
+
+        function toggleRecenter() {
+            isRecentering = !isRecentering;
+            if (isRecentering) {
+                disableMoveButtons();
+                document.getElementById('recenter-button').classList.add('recenter-mode');
+                fetch(`/recenter_car`).then(response => response.json()).then(data => {
+                    if (data.status === 'recentered') {
+                        enableMoveButtons();
+                    }
+                });
+            } else {
+                enableMoveButtons();
+                document.getElementById('recenter-button').classList.remove('recenter-mode');
+                fetch(`/stop_recenter`);
+            }
+        }
+
+        function disableMoveButtons() {
+            const buttons = document.querySelectorAll('.control-buttons button');
+            buttons.forEach(button => {
+                if (button.id !== 'recenter-button') {
+                    button.classList.add('disabled-button');
+                    button.disabled = true;
+                }
+            });
+        }
+
+        function enableMoveButtons() {
+            const buttons = document.querySelectorAll('.control-buttons button');
+            buttons.forEach(button => {
+                if (button.id !== 'recenter-button') {
+                    button.classList.remove('disabled-button');
+                    button.disabled = false;
+                }
+            });
+            document.getElementById('recenter-button').classList.remove('recenter-mode');
+            isRecentering = false;
+        }
+
+        // Logic to control the movement of the camera
+        function startMovingCamera(direction) {
+            if (!isTracking) {
+                fetch(`/move_camera?direction=${direction}`);
+                moveCameraInterval = setInterval(() => {
+                    fetch(`/move_camera?direction=${direction}`);
+                }, 100); // Adjust the interval as needed
+            }
+        }
+
+        function stopMovingCamera() {
+            clearInterval(moveCameraInterval);
+        }
+
+        function toggleTracking() {
+            isTracking = !isTracking;
+            const buttons = document.querySelectorAll('.camera-control-buttons button');
+            buttons.forEach(button => {
+                if (button.id !== 'track-button') {
+                    button.classList.toggle('disabled-button', isTracking);
+                    button.disabled = isTracking;
+                }
+            });
+            document.getElementById('track-button').classList.toggle('tracking-mode', isTracking);
+
+            fetch(`/toggle_tracking?enabled=${isTracking}`);
+        }
+
+        // Ensure that movement stops if the mouse or touch leaves the button
+        document.querySelectorAll('button').forEach(button => {
+            button.onmouseleave = () => {
+                stopMovingCar();
+                stopMovingCamera();
+            };
+            button.ontouchcancel = () => {
+                stopMovingCar();
+                stopMovingCamera();
+            };
+        });
+
+
+</script>
+</body>
+</html>
