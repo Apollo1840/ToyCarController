@@ -29,6 +29,7 @@ def handle_move_command(json):
     elif action == 'stop':
         motor_controller.stop()
 
+
 """
 @app.route('/recenter_car')
 def recenter_car():
