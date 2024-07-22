@@ -22,9 +22,9 @@ def index():
 
 @socketio.on('move_command')
 def handle_move_command(json):
-    direction = json['direction']
-    action = json['action']
+    action = json.get('action')
     if action == 'start':
+        direction = json.get('direction')
         motor_controller.move(direction)
     elif action == 'stop':
         motor_controller.stop()
