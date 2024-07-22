@@ -43,11 +43,11 @@ img {
 }
 
 button {
-    font-size: 18px;
+    font-size: 16px; /* Smaller font size */
     margin: 5px;
-    padding: 10px;
-    width: 60px;
-    height: 60px;
+    padding: 8px; /* Smaller padding */
+    width: 50px; /* Smaller width */
+    height: 50px; /* Smaller height */
     border-radius: 10px;
     border: none;
     background-color: #007BFF;
@@ -60,7 +60,7 @@ button:active {
 }
 
 button i {
-    font-size: 20px;
+    font-size: 18px; /* Smaller icon size */
 }
 
 .horizontal-buttons, .horizontal-camera-buttons {
@@ -95,12 +95,12 @@ button i {
     }
 
     button {
-        font-size: 14px;
-        width: 50px;
-        height: 50px;
+        font-size: 12px; /* Smaller font size for mobile */
+        width: 40px; /* Smaller width for mobile */
+        height: 40px; /* Smaller height for mobile */
     }
 
     button i {
-        font-size: 16px;
+        font-size: 14px; /* Smaller icon size for mobile */
     }
 }
