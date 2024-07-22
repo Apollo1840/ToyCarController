@@ -11,7 +11,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 face_detector = FaceDetector()
 servo_controller = TrackableServoController(face_detector)
-motor_controller = MotorController(speed=0.2)
+motor_controller = MotorController(speed=0.55)
 app.config['SECRET_KEY'] = 'secret!'
 
 
