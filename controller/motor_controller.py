@@ -55,8 +55,10 @@ class MotorController:
                         current = max(current - step, target)
                     # print(f"motor: {motor}, target: {target}, current: {current}")
                     self._set_motor_throttle(motor, current)
-            if all_reached or self.stopping:
+            if all_reached:
                 break
+            if self.stopping:
+                self.stop()
             time.sleep(0.1)
 
     def _set_motor_throttle(self, motor, throttle):
