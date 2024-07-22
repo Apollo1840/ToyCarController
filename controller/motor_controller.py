@@ -15,6 +15,7 @@ class MotorController:
             "motor3": 0,
             "motor4": 0
         }
+        self.stopping = True
 
     def move(self, direction):
         if not self.is_recentering:
@@ -39,6 +40,7 @@ class MotorController:
             # self.stop()
 
     def _gradual_throttle_change(self, target_throttle):
+        self.stopping = False
         step = 0.05
         max_steps = int(2 / step)
         for _ in range(max_steps):
@@ -51,9 +53,9 @@ class MotorController:
                         current = min(current + step, target)
                     elif target < current:
                         current = max(current - step, target)
-                    print(f"motor: {motor}, target: {target}, current: {current}")
+                    # print(f"motor: {motor}, target: {target}, current: {current}")
                     self._set_motor_throttle(motor, current)
-            if all_reached:
+            if all_reached or self.stopping:
                 break
             time.sleep(0.1)
 
@@ -65,6 +67,8 @@ class MotorController:
 
     def stop(self):
         print("stopping motors")
+        self.stopping = True
+
         self.kit.motor1.throttle = 0
         self.kit.motor2.throttle = 0
         self.kit.motor3.throttle = 0
