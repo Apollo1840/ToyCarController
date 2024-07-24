@@ -5,8 +5,29 @@ from adafruit_motorkit import MotorKit
 
 
 class MotorController:
-    def __init__(self):
+    def __init__(self, speed=1):
         self.kit = MotorKit()
+        self.speed = speed
+
+        self.target_throttle = {
+            "forward": {"motor1": -1.0 * self.speed,
+                        "motor2": 1.0 * self.speed,
+                        "motor3": -1.0 * self.speed,
+                        "motor4": 1.0 * self.speed},
+            "backward": {"motor1": 1.0 * self.speed,
+                         "motor2": -1.0 * self.speed,
+                         "motor3": 1.0 * self.speed,
+                         "motor4": -1.0 * self.speed},
+            "left": {"motor1": 1.0 * self.speed,
+                     "motor2": -1.0 * self.speed,
+                     "motor3": -1.0 * self.speed,
+                     "motor4": 1.0 * self.speed},
+            "right": {"motor1": -1.0 * self.speed,
+                      "motor2": 1.0 * self.speed,
+                      "motor3": 1.0 * self.speed,
+                      "motor4": -1.0 * self.speed}
+        }
+
         self.is_recentering = False
         self.recenter_thread = None
         self.current_throttle = {
@@ -15,30 +36,14 @@ class MotorController:
             "motor3": 0,
             "motor4": 0
         }
+        self.stopping = True
 
     def move(self, direction):
-        if not self.is_recentering:
-            target_throttle = {
-                "motor1": 0,
-                "motor2": 0,
-                "motor3": 0,
-                "motor4": 0
-            }
-
-            if direction == 'forward':
-                target_throttle = {"motor1": 1.0, "motor2": 1.0, "motor3": 1.0, "motor4": 1.0}
-            elif direction == 'backward':
-                target_throttle = {"motor1": -1.0, "motor2": -1.0, "motor3": -1.0, "motor4": -1.0}
-            elif direction == 'left':
-                target_throttle = {"motor1": -0.5, "motor2": 0.5, "motor3": -0.5, "motor4": 0.5}
-            elif direction == 'right':
-                target_throttle = {"motor1": 0.5, "motor2": -0.5, "motor3": 0.5, "motor4": -0.5}
-
-            self._gradual_throttle_change(target_throttle)
-            time.sleep(0.5)
-            self.stop()
+        if not self.is_recentering and direction in self.target_throttle:
+            self._gradual_throttle_change(self.target_throttle[direction])
 
     def _gradual_throttle_change(self, target_throttle):
+        self.stopping = False
         step = 0.05
         max_steps = int(2 / step)
         for _ in range(max_steps):
@@ -51,8 +56,12 @@ class MotorController:
                         current = min(current + step, target)
                     elif target < current:
                         current = max(current - step, target)
+                    # print(f"motor: {motor}, target: {target}, current: {current}")
                     self._set_motor_throttle(motor, current)
             if all_reached:
+                break
+            if self.stopping:
+                self.stop()
                 break
             time.sleep(0.1)
 
@@ -63,7 +72,9 @@ class MotorController:
         print(f"{motor} throttle set to {throttle}")
 
     def stop(self):
-        print(">> stopping motors")
+        print("stopping motors")
+        self.stopping = True
+
         self.kit.motor1.throttle = 0
         self.kit.motor2.throttle = 0
         self.kit.motor3.throttle = 0

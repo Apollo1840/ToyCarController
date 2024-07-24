@@ -7,7 +7,7 @@ body {
     background-color: #f8f9fa;
 }
 
-h1 {
+h1, h2 {
     margin: 20px 0;
     font-size: 24px;
 }
@@ -25,33 +25,29 @@ img {
     border-radius: 10px;
 }
 
-.control-panel {
+.control-panels {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     width: 100%;
     max-width: 640px;
     padding: 20px;
     box-sizing: border-box;
+    flex-wrap: wrap; /* Allow wrapping */
 }
 
-.car-control-buttons, .camera-control-buttons {
+.car-control-panel, .camera-control-panel {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.horizontal-buttons, .horizontal-camera-buttons {
-    display: flex;
-    justify-content: center;
-    margin: 10px 0;
+    width: 48%;
 }
 
 button {
-    font-size: 18px;
+    font-size: 16px; /* Smaller font size */
     margin: 5px;
-    padding: 15px;
-    width: 80px;
-    height: 80px;
+    padding: 8px; /* Smaller padding */
+    width: 50px; /* Smaller width */
+    height: 50px; /* Smaller height */
     border-radius: 10px;
     border: none;
     background-color: #007BFF;
@@ -61,6 +57,16 @@ button {
 
 button:active {
     background-color: #0056b3;
+}
+
+button i {
+    font-size: 18px; /* Smaller icon size */
+}
+
+.horizontal-buttons, .horizontal-camera-buttons {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
 }
 
 .tracking-mode {
@@ -76,10 +82,25 @@ button:active {
     background-color: #ffc107;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 768px) {
+    .control-panels {
+        flex-direction: row; /* Ensure panels are side by side */
+        flex-wrap: nowrap; /* Prevent wrapping */
+        justify-content: space-around; /* Space panels evenly */
+    }
+
+    .car-control-panel, .camera-control-panel {
+        width: 45%;
+        margin-bottom: 20px;
+    }
+
     button {
-        font-size: 24px;
-        width: 100px;
-        height: 100px;
+        font-size: 12px; /* Smaller font size for mobile */
+        width: 40px; /* Smaller width for mobile */
+        height: 40px; /* Smaller height for mobile */
+    }
+
+    button i {
+        font-size: 14px; /* Smaller icon size for mobile */
     }
 }
