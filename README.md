@@ -1,13 +1,14 @@
 # ToyCarController
 
 ## Materials
+
 - A laptop (with ubuntu OS)
 - A Raspberry Pi 3 Board with power cable
 - A MicroSD card
 - A MicroSD to USB converter
-- A Servo with Camera
-
-and a working space with wifi access.
+- A Camera with two Servos
+- Motors with cable (x4)
+  and a working space with wifi access.
 
 ## How to build
 
@@ -23,7 +24,7 @@ and a working space with wifi access.
    ```bash
    # Action: plug-in: MicroSD -> Laptop  # may need converter
    ```
-   
+
 3) Run Program:
 
     ```bash
@@ -33,7 +34,7 @@ and a working space with wifi access.
    ```
 
 3) Run Command:
-   
+
     ```bash
     # navigate to the root of the MicroSD card
     cd /media/congyu/bootfs
@@ -42,7 +43,7 @@ and a working space with wifi access.
    ```
 
 4) Type In (Accordingly): type the following content according to your true information and save.
-   
+
 ```bash
             country=YOUR_CONTRY_CODE  # eg. US
             ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -55,7 +56,7 @@ and a working space with wifi access.
             }
 ```
 
-5) Plug In: 
+5) Plug In:
    ```bash
    # Action: plug-out: MicroSD <- Laptop
    # Action: plug-in:  MicroSD -> Raspberry Pi 3 Board
@@ -81,33 +82,32 @@ and a working space with wifi access.
     ```
 
 
-   
 3) Run Command (Accordingly):
 
     ```bash
     # Modify the following IP based on your Router IP.
     nmap -sn 192.168.1.0/24
     ```
-   
+
 4) Observe:
 
     ```bash
     # Action: Figure out your Rasberry IP. (eg. 192.168.1.xxx)
     ```
-   
+
 5) Run Command (Accordingly):
 
    ```bash
    ssh pi@192.168.1.xxx
    # for password, type in: raspberry
    ```
-   
+
 6) Run Command:
 
    ```bash
    exit
    ```
-   
+
 ### Step 3: Setup environment and Clone the repository to the Raspberry Pi
 
 1) Run Command (Accordingly):
@@ -118,7 +118,7 @@ and a working space with wifi access.
    ```
 
 2) Run Command:
-   
+
    ```bash
    sudo apt install python3-venv
    python3 -m venv toy_car_controller
@@ -126,29 +126,43 @@ and a working space with wifi access.
    ```
 
 2) Run Command:
-   
+
    ```bash
    git clone <this git repository>
    cd ToyCarController
    pip3 install -r requirements.txt
    ```
-   
-### Step 4: Install Servo
+
+### Step 4: Install Camera
 
 1) Plug In:
-   
+
    ```bash
    # Action: plug-out: Power cable <- Raspberry Pi 3 Board
-   # Action: plug-in:  Adafruit Control Board -> Raspberry Pi 3 Board
-   # Action: plug-in:  Servo -> Adafruit Control Board
+   # Action: plug-in:  Adafruit Control Board (With Power) -> Raspberry Pi 3 Board
+   # Action: plug-in:  Camera -(Servo cable)-> Adafruit Control Board (With Power))
    # Action: plug-in:  Camera -(USB)-> Raspberry Pi 3 Board
-   # Action: plug-in:  Power cable -> Adafruit Control Board
+   ```
+
+### Step 5: Install Motors
+
+1) Plug In:
+
+   ```bash
+   # Action: plug-in:  Motors x 4 -> Adafruit Control Board
+   # Action: plug-in:  Adafruit Control Board -(GPIO & Power)-> Adafruit Control Board (With Power)
+   ```
+   
+2) Plug In:
+
+   ```bash
+   # Action: plug-in:  Power cable -> Adafruit Control Board (With Power)
    # Action: plug-in:  Power cable -> Raspberry Pi 3 Board
    
    # Action: wait ~3 minutes (for raspberry to start)
    ```
 
-### Step 5: Play
+### Step 6: Play
 
 1) Run Command (Accordingly):
 
@@ -157,7 +171,7 @@ and a working space with wifi access.
    ssh pi@192.168.1.xxx
    # for password, type in: raspberry  
    ```
-   
+
 2) Run Command:
    ```bash
    source toy_car_controller/bin/activate
