@@ -8,7 +8,9 @@
 - A MicroSD to USB converter
 - A Camera with two Servos
 - Motors with cable (x4)
-  and a working space with wifi access.
+  
+
+and a working space with wifi access.
 
 ## How to build
 
