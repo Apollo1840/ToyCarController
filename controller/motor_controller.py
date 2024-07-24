@@ -63,7 +63,7 @@ class MotorController:
         print(f"{motor} throttle set to {throttle}")
 
     def stop(self):
-        print("stopping motors")
+        print(">> stopping motors")
         self.kit.motor1.throttle = 0
         self.kit.motor2.throttle = 0
         self.kit.motor3.throttle = 0
