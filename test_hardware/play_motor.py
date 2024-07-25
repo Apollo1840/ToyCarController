@@ -40,9 +40,9 @@ if __name__ == "__main__":
     time.sleep(3)
 
     # Run motor 1 forward and backward
-    run_motor(kit.motor1, 1.0, 3)
-    time.sleep(1)
     run_motor(kit.motor1, -1.0, 3)
+    time.sleep(1)
+    run_motor(kit.motor1, 1.0, 3)
 
     # Run motor 2 forward and backward
     run_motor(kit.motor2, 1.0, 3)
@@ -50,9 +50,9 @@ if __name__ == "__main__":
     run_motor(kit.motor2, -1.0, 3)
 
     # Run motor 3 forward and backward
-    run_motor(kit.motor3, 1.0, 3)
-    time.sleep(1)
     run_motor(kit.motor3, -1.0, 3)
+    time.sleep(1)
+    run_motor(kit.motor3, 1.0, 3)
 
     # Run motor 4 forward and backward
     run_motor(kit.motor4, 1.0, 3)
