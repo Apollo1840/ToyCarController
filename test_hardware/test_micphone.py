@@ -33,7 +33,7 @@ def audio_stream():
         data = stream.read(CHUNK, exception_on_overflow=False)
         audio_data = np.frombuffer(data, dtype=np.int16)
         # Normalize volume between 0 and 1
-        volume = np.linalg.norm(audio_data) / (CHUNK * 2)
+        volume = np.linalg.norm(audio_data) / (CHUNK * 48)
         socketio.emit('volume', {'volume': volume})
 
     stream.stop_stream()
