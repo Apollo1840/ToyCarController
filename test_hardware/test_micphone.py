@@ -8,13 +8,12 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 # Audio parameters
-CHUNK = 2024  # Increased buffer size
+CHUNK = 2048
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 
 # Global variables to manage the audio stream and thread
-p = pyaudio.PyAudio()
 stream = None
 streaming_thread = None
 streaming = False
@@ -32,9 +31,8 @@ def audio_stream():
     while streaming:
         data = stream.read(CHUNK, exception_on_overflow=False)
         audio_data = np.frombuffer(data, dtype=np.int16)
-        # Normalize volume between 0 and 1
         volume = np.linalg.norm(audio_data) / (CHUNK * 48)
-        socketio.emit('volume', {'volume': volume})
+        socketio.emit('volume', {'volume': volume, 'audio_data': data.hex()})
 
     stream.stop_stream()
     stream.close()
@@ -63,7 +61,6 @@ def stop_listening():
 
 
 if __name__ == '__main__':
-    # List audio devices and ask the user to select one
     def list_audio_devices():
         p = pyaudio.PyAudio()
         info = p.get_host_api_info_by_index(0)
@@ -77,6 +74,5 @@ if __name__ == '__main__':
 
     list_audio_devices()
     DEVICE_INDEX = int(input("Enter the device index to use for recording: "))
-
-    # Start the Flask server
+    p = pyaudio.PyAudio()
     socketio.run(app, host='0.0.0.0', port=5000)

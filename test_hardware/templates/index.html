@@ -12,6 +12,7 @@
     <button id="listen">Listen</button>
     <p id="status">Status: Stopped</p>
     <canvas id="volumeChart" width="400" height="400"></canvas>
+    <audio id="audio" controls></audio>
 
     <script>
         let listening = false;
@@ -51,6 +52,16 @@
             let volume = msg.volume;
             volumeChart.data.datasets[0].data[0] = volume;
             volumeChart.update();
+
+            // Play audio data
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = new Uint8Array(msg.audio_data.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
+            audioCtx.decodeAudioData(audioBuffer, function(buffer) {
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.start(0);
+            });
         });
 
         socket.on('listening_status', function(msg) {
