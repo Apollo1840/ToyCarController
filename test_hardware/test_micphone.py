@@ -8,13 +8,12 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 # Audio parameters
-CHUNK = 1024
+CHUNK = 2048  # Increased buffer size
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 
 # Global variables to manage the audio stream and thread
-p = pyaudio.PyAudio()
 stream = None
 streaming_thread = None
 streaming = False
@@ -32,7 +31,10 @@ def audio_stream():
     while streaming:
         data = stream.read(CHUNK, exception_on_overflow=False)
         audio_data = np.frombuffer(data, dtype=np.int16)
-        volume = np.linalg.norm(audio_data) / CHUNK
+        # Normalize volume between 0 and 1
+        volume = np.linalg.norm(audio_data) / (CHUNK * 32767)
+        if volume > 1:
+            volume = 1
         socketio.emit('volume', {'volume': volume})
 
     stream.stop_stream()
