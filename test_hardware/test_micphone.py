@@ -14,6 +14,7 @@ CHANNELS = 1
 RATE = 44100
 
 # Global variables to manage the audio stream and thread
+p = pyaudio.PyAudio()
 stream = None
 streaming_thread = None
 streaming = False
