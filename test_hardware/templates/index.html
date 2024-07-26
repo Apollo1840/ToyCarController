@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Volume Indicator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <h1>Real-time Volume Indicator</h1>
+    <button id="listen">Listen</button>
+    <p id="status">Status: Stopped</p>
+    <canvas id="volumeChart" width="400" height="400"></canvas>
+
+    <script>
+        let listening = false;
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        const ctx = document.getElementById('volumeChart').getContext('2d');
+        const volumeChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Volume'],
+                datasets: [{
+                    label: 'Volume Level',
+                    data: [0],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1
+                    }
+                }
+            }
+        });
+
+        document.getElementById('listen').addEventListener('click', function() {
+            if (listening) {
+                socket.emit('stop_listening');
+            } else {
+                socket.emit('start_listening');
+            }
+        });
+
+        socket.on('volume', function(msg) {
+            volumeChart.data.datasets[0].data[0] = msg.volume;
+            volumeChart.update();
+        });
+
+        socket.on('listening_status', function(msg) {
+            listening = (msg.status === 'started');
+            document.getElementById('status').innerText = 'Status: ' + (listening ? 'Listening' : 'Stopped');
+            document.getElementById('listen').innerText = listening ? 'Stop' : 'Listen';
+        });
+    </script>
+</body>
+</html>
