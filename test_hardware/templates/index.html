@@ -48,7 +48,11 @@
         });
 
         socket.on('volume', function(msg) {
-            volumeChart.data.datasets[0].data[0] = msg.volume;
+            let volume = msg.volume;
+            // Ensure volume is between 0 and 1
+            if (volume < 0) volume = 0;
+            if (volume > 1) volume = 1;
+            volumeChart.data.datasets[0].data[0] = volume;
             volumeChart.update();
         });
 

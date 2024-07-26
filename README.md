@@ -132,6 +132,7 @@ and a working space with wifi access.
    ```bash
    git clone <this git repository>
    cd ToyCarController
+   sudo apt-get install portaudio19-dev
    pip3 install -r requirements.txt
    ```
 

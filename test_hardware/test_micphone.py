@@ -14,14 +14,6 @@ CHANNELS = 1
 RATE = 44100
 
 # Global variables to manage the audio stream and thread
-# Audio parameters
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 44100
-DEVICE_INDEX = 6
-
-# Initialize PyAudio
 p = pyaudio.PyAudio()
 stream = None
 streaming_thread = None
