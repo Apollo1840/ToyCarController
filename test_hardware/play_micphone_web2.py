@@ -1,8 +1,10 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, Response
 import time
 import pyaudio
 import threading
 import queue
+import io
+import wave
 
 app = Flask(__name__)
 
@@ -56,7 +58,7 @@ def callback(in_data, frame_count, time_info, status):
 
 @app.route('/')
 def index():
-    return render_template('index_web.html')
+    return render_template('index_web2.html')
 
 
 @app.route('/start_recording', methods=['POST'])
@@ -73,26 +75,19 @@ def stop():
     return jsonify({"status": "recording stopped"})
 
 
-@app.route('/play_audio', methods=['POST'])
-def play_audio():
-    play_audio_from_frames(list(frames.queue), FORMAT, CHANNELS, RATE)
-    return jsonify({"status": "audio played"})
-
-
-def play_audio_from_frames(frames, format, channels, rate):
-    p = pyaudio.PyAudio()
-    stream = p.open(format=format,
-                    channels=channels,
-                    rate=rate,
-                    output=True)
-
-    for frame in frames:
-        # time.sleep(0.1)
-        stream.write(frame)
-
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+@app.route('/get_audio', methods=['GET'])
+def get_audio():
+    def generate_wav():
+        with io.BytesIO() as mem_file:
+            with wave.open(mem_file, 'wb') as wf:
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(p.get_sample_size(FORMAT))
+                wf.setframerate(RATE)
+                while not frames.empty():
+                    wf.writeframes(frames.get())
+            mem_file.seek(0)
+            yield mem_file.read()
+    return Response(generate_wav(), mimetype="audio/wav")
 
 
 if __name__ == "__main__":
