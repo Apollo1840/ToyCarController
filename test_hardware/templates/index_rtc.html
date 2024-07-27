@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Volume Indicator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <h1>Real-time Volume Indicator</h1>
+    <button id="listen">Listen</button>
+    <p id="status">Status: Stopped</p>
+    <canvas id="volumeChart" width="400" height="400"></canvas>
+
+    <script>
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        const ctx = document.getElementById('volumeChart').getContext('2d');
+        const volumeChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Volume'],
+                datasets: [{
+                    label: 'Volume Level',
+                    data: [0],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1
+                    }
+                }
+            }
+        });
+
+        let listening = false;
+        let localConnection;
+        let remoteStream = new MediaStream();
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let bufferLength;
+
+        document.getElementById('listen').addEventListener('click', function() {
+            if (listening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        });
+
+        function startListening() {
+            listening = true;
+            document.getElementById('status').innerText = 'Status: Listening';
+            document.getElementById('listen').innerText = 'Stop';
+            console.log("Starting listening");
+
+            setupWebRTC();
+            socket.emit('start_listening');
+        }
+
+        function stopListening() {
+            listening = false;
+            document.getElementById('status').innerText = 'Status: Stopped';
+            document.getElementById('listen').innerText = 'Listen';
+            console.log("Stopping listening");
+
+            if (localConnection) {
+                localConnection.close();
+                localConnection = null;
+            }
+            socket.emit('stop_listening');
+        }
+
+        function setupWebRTC() {
+            localConnection = new RTCPeerConnection();
+            console.log("Setting up WebRTC");
+
+            localConnection.onicecandidate = ({ candidate }) => {
+                if (candidate) {
+                    socket.emit('ice-candidate', candidate);
+                    console.log(`ICE Candidate sent: ${JSON.stringify(candidate)}`);
+                }
+            };
+
+            localConnection.ontrack = (event) => {
+                console.log("Remote track received");
+                remoteStream.addTrack(event.track);
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const source = audioContext.createMediaStreamSource(remoteStream);
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 2048;
+                    bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+                    source.connect(analyser);
+                    draw();
+                }
+            };
+
+            // Create and send offer to the server
+            localConnection.createOffer()
+                .then(offer => {
+                    console.log(`Offer created: ${JSON.stringify(offer)}`);
+                    return localConnection.setLocalDescription(offer);
+                })
+                .then(() => {
+                    console.log(`Local description set: ${JSON.stringify(localConnection.localDescription)}`);
+                    console.log(`signalingState after creating offer: ${JSON.stringify(localConnection.signalingState)}`);
+                    socket.emit('offer', localConnection.localDescription);
+                    console.log(`Offer sent: ${JSON.stringify(localConnection.localDescription)}`);
+                })
+                .catch(error => console.error('Error creating offer:', error));
+
+            socket.on('offer', async (data) => {
+                console.log(`Offer received: ${JSON.stringify(data)}`);
+                if (localConnection.signalingState !== "stable") {
+                    console.log(`signalingState after receiving offer: ${JSON.stringify(localConnection.signalingState)}`);
+                    console.warn("Connection is not stable. Renegotiating...");
+                    await localConnection.setLocalDescription({ type: 'rollback' });
+                    console.log("Rolled back to stable state");
+                }
+                await localConnection.setRemoteDescription(new RTCSessionDescription(data));
+                console.log(`signalingState after set RTC description: ${JSON.stringify(localConnection.signalingState)}`);
+                console.log("Remote description set from offer");
+
+                const answer = await localConnection.createAnswer();
+                console.log(`Answer created: ${JSON.stringify(answer)}`);
+                console.log(`signalingState after creating answer: ${JSON.stringify(localConnection.signalingState)}`);
+                await localConnection.setLocalDescription(answer);
+                console.log(`signalingState after set local description: ${JSON.stringify(localConnection.signalingState)}`);
+                console.log(`Local description set from answer: ${JSON.stringify(localConnection.localDescription)}`);
+                socket.emit('answer', localConnection.localDescription);
+                console.log(`Answer sent: ${JSON.stringify(localConnection.localDescription)}`);
+            });
+
+            socket.on('answer', async (data) => {
+                console.log(`Answer received: ${JSON.stringify(data)}`);
+                if (localConnection.signalingState === "have-local-offer") {
+                    await localConnection.setRemoteDescription(new RTCSessionDescription(data));
+                    console.log("Remote description set from answer");
+                } else {
+                    console.log(`signalingState after receiving answer: ${JSON.stringify(localConnection.signalingState)}`);
+                    console.error("Received answer in an unexpected state");
+                }
+            });
+
+            socket.on('ice-candidate', (candidate) => {
+                console.log(`ICE Candidate received: ${JSON.stringify(candidate)}`);
+                localConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            });
+
+            localConnection.onconnectionstatechange = () => {
+                console.log(`Connection state change: ${localConnection.connectionState}`);
+            };
+
+            localConnection.onsignalingstatechange = () => {
+                console.log(`Signaling state change: ${localConnection.signalingState}`);
+            };
+        }
+
+        function draw() {
+            if (!listening) return;
+            requestAnimationFrame(draw);
+
+            analyser.getByteTimeDomainData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                let value = (dataArray[i] - 128) / 128.0;
+                sum += value * value;
+            }
+            let volume = Math.sqrt(sum / bufferLength);
+            volumeChart.data.datasets[0].data[0] = volume;
+            volumeChart.update();
+        }
+
+        socket.on('listening_status', function(msg) {
+            console.log(`Listening status: ${msg.status}`);
+            listening = (msg.status === 'started');
+            document.getElementById('status').innerText = 'Status: ' + (listening ? 'Listening' : 'Stopped');
+            document.getElementById('listen').innerText = listening ? 'Stop' : 'Listen';
+        });
+
+        socket.on('audio_data', function(data) {
+            // console.log(`Audio data received: ${data.audio_data}`);
+            const audioData = new Uint8Array(data.audio_data.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            // console.log(`Parsed audio data: ${Array.from(audioData)}`); // Log the parsed integers
+            console.log(audioContext);
+            if (audioContext) {
+                audioContext.decodeAudioData(audioData.buffer, (buffer) => {
+                    const source = audioContext.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioContext.destination);
+                    source.start();
+                }, (error) => {
+                    console.error('Error decoding audio data:', error);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -3,12 +3,13 @@ from flask_socketio import SocketIO, emit
 import pyaudio
 import numpy as np
 import threading
+import scipy.signal
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 
 # Audio parameters
-CHUNK = 2048
+CHUNK = 4096  # Increased chunk size for smoother streaming
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
@@ -18,6 +19,8 @@ stream = None
 streaming_thread = None
 streaming = False
 
+p = pyaudio.PyAudio()
+
 
 def audio_stream():
     global stream, streaming
@@ -25,14 +28,29 @@ def audio_stream():
                     channels=CHANNELS,
                     rate=RATE,
                     input=True,
-                    input_device_index=DEVICE_INDEX,
                     frames_per_buffer=CHUNK)
+
+    b, a = scipy.signal.butter(6, 0.1, btype='low')  # Low-pass filter parameters
+    volume_history = []
 
     while streaming:
         data = stream.read(CHUNK, exception_on_overflow=False)
         audio_data = np.frombuffer(data, dtype=np.int16)
-        volume = np.linalg.norm(audio_data) / (CHUNK * 48)
-        socketio.emit('volume', {'volume': volume, 'audio_data': data.hex()})
+
+        # Apply low-pass filter
+        filtered_data = scipy.signal.lfilter(b, a, audio_data)
+
+        # Compute volume
+        volume = np.linalg.norm(filtered_data) / (CHUNK * 48)
+        volume_history.append(volume)
+        if len(volume_history) > 5:
+            volume_history.pop(0)
+
+        smoothed_volume = np.mean(volume_history)
+        if smoothed_volume > 1:
+            smoothed_volume = 1
+
+        socketio.emit('volume', {'volume': smoothed_volume, 'audio_data': filtered_data.tobytes().hex()})
 
     stream.stop_stream()
     stream.close()
@@ -61,18 +79,4 @@ def stop_listening():
 
 
 if __name__ == '__main__':
-    def list_audio_devices():
-        p = pyaudio.PyAudio()
-        info = p.get_host_api_info_by_index(0)
-        num_devices = info.get('deviceCount')
-        for i in range(num_devices):
-            device_info = p.get_device_info_by_host_api_device_index(0, i)
-            if device_info.get('maxInputChannels') > 0:
-                print(f"Device ID {i} - {device_info.get('name')}")
-        p.terminate()
-
-
-    list_audio_devices()
-    DEVICE_INDEX = int(input("Enter the device index to use for recording: "))
-    p = pyaudio.PyAudio()
     socketio.run(app, host='0.0.0.0', port=5000)

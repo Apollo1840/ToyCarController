@@ -12,7 +12,6 @@
     <button id="listen">Listen</button>
     <p id="status">Status: Stopped</p>
     <canvas id="volumeChart" width="400" height="400"></canvas>
-    <audio id="audio" controls></audio>
 
     <script>
         let listening = false;
@@ -40,31 +39,117 @@
             }
         });
 
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioBufferQueue = [];
+        let source = null;
+        let isPlaying = false;
+        let volumeHistory = [];
+
         document.getElementById('listen').addEventListener('click', function() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().then(() => {
+                    console.log('AudioContext resumed');
+                });
+            }
+
             if (listening) {
+                console.log('Stopping listening');
                 socket.emit('stop_listening');
             } else {
+                console.log('Starting listening');
                 socket.emit('start_listening');
             }
         });
 
+        function convertPCMToWav(pcmData, numOfChannels, sampleRate) {
+            const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+            const view = new DataView(buffer);
+
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            let offset = 0;
+
+            // RIFF identifier
+            writeString(view, offset, 'RIFF'); offset += 4;
+            // file length minus RIFF identifier length and file description length
+            view.setUint32(offset, 36 + pcmData.length * 2, true); offset += 4;
+            // RIFF type
+            writeString(view, offset, 'WAVE'); offset += 4;
+            // format chunk identifier
+            writeString(view, offset, 'fmt '); offset += 4;
+            // format chunk length
+            view.setUint32(offset, 16, true); offset += 4;
+            // sample format (raw)
+            view.setUint16(offset, 1, true); offset += 2;
+            // channel count
+            view.setUint16(offset, numOfChannels, true); offset += 2;
+            // sample rate
+            view.setUint32(offset, sampleRate, true); offset += 4;
+            // byte rate (sample rate * block align)
+            view.setUint32(offset, sampleRate * numOfChannels * 2, true); offset += 4;
+            // block align (channel count * bytes per sample)
+            view.setUint16(offset, numOfChannels * 2, true); offset += 2;
+            // bits per sample
+            view.setUint16(offset, 16, true); offset += 2;
+            // data chunk identifier
+            writeString(view, offset, 'data'); offset += 4;
+            // data chunk length
+            view.setUint32(offset, pcmData.length * 2, true); offset += 4;
+
+            // write the PCM samples
+            for (let i = 0; i < pcmData.length; i++) {
+                view.setInt16(offset, pcmData[i], true);
+                offset += 2;
+            }
+
+            return buffer;
+        }
+
+        function playNextBuffer() {
+            if (audioBufferQueue.length > 0 && !isPlaying) {
+                isPlaying = true;
+                const buffer = audioBufferQueue.shift();
+                source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.onended = function() {
+                    isPlaying = false;
+                    playNextBuffer();
+                };
+                source.start(0);
+            }
+        }
+
         socket.on('volume', function(msg) {
+            console.log('Volume data received:', msg);
             let volume = msg.volume;
-            volumeChart.data.datasets[0].data[0] = volume;
+            volumeHistory.push(volume);
+            if (volumeHistory.length > 5) {
+                volumeHistory.shift();
+            }
+
+            let smoothedVolume = volumeHistory.reduce((a, b) => a + b, 0) / volumeHistory.length;
+            volumeChart.data.datasets[0].data[0] = smoothedVolume;
             volumeChart.update();
 
             // Play audio data
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const audioBuffer = new Uint8Array(msg.audio_data.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
-            audioCtx.decodeAudioData(audioBuffer, function(buffer) {
-                const source = audioCtx.createBufferSource();
-                source.buffer = buffer;
-                source.connect(audioCtx.destination);
-                source.start(0);
+            const pcmData = new Int16Array(msg.audio_data.match(/.{1,2}/g).map(byte => parseInt(byte, 16) << 8 | parseInt(byte, 16)));
+            const wavBuffer = convertPCMToWav(pcmData, 1, 44100);
+
+            audioCtx.decodeAudioData(wavBuffer, function(buffer) {
+                audioBufferQueue.push(buffer);
+                playNextBuffer();
+            }, function(e) {
+                console.error('Error decoding audio data:', e);
             });
         });
 
         socket.on('listening_status', function(msg) {
+            console.log('Listening status:', msg.status);
             listening = (msg.status === 'started');
             document.getElementById('status').innerText = 'Status: ' + (listening ? 'Listening' : 'Stopped');
             document.getElementById('listen').innerText = listening ? 'Stop' : 'Listen';

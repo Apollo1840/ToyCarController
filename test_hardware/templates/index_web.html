@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recorder</title>
+</head>
+<body>
+    <h1>Audio Recorder</h1>
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn">Stop Recording</button>
+    <button id="playBtn">Play Audio</button>
+
+    <script>
+        document.getElementById('startBtn').onclick = function() {
+            fetch('/start_recording', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => console.log(data));
+        };
+
+        document.getElementById('stopBtn').onclick = function() {
+            fetch('/stop_recording', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => console.log(data));
+        };
+
+        document.getElementById('playBtn').onclick = function() {
+            fetch('/play_audio', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => console.log(data));
+        };
+    </script>
+</body>
+</html>
