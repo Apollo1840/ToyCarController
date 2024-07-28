@@ -30,8 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def start_recording():
-    global frames, stream
-    frames.queue.clear()
+    global frame, stream
     is_recording.set()
 
     stream = p.open(format=FORMAT,
@@ -59,17 +58,14 @@ def stop_recording():
 
 
 def callback(in_data, frame_count, time_info, status):
-    if is_recording.is_set():
-        if frames.full():
-            frames.get_nowait()  # Discard the oldest frame to make space
-        frames.put(in_data)
-    logger.info("Keep recording at %s, frames len: %d", datetime.now(), frames.qsize())
+    frame = in_data
+    logger.info("Keep recording at %s", datetime.now())
     return (in_data, pyaudio.paContinue)
 
 
 @app.route('/')
 def index():
-    return render_template('index_web3.html')
+    return render_template('index_web4.html')
 
 
 @app.route('/start_recording', methods=['POST'])
@@ -88,26 +84,16 @@ def stop():
 
 @app.route('/get_audio', methods=['GET'])
 def get_audio():
-    if frames.qsize() < CHUNK_SIZE:
-        return Response("Empty", mimetype="text/plain")
-
-    frames_collected = []
-    while len(frames_collected) < CHUNK_SIZE:
-        if not is_playing.is_set():
-            return Response("Empty", mimetype="text/plain")
-        frames_collected.append(frames.get())
-    logger.info("Playing at %s, frames len: %d", datetime.now(), frames.qsize())
-
     def generate_wav():
         with io.BytesIO() as mem_file:
             with wave.open(mem_file, 'wb') as wf:
                 wf.setnchannels(CHANNELS)
                 wf.setsampwidth(p.get_sample_size(FORMAT))
                 wf.setframerate(RATE)
-                for frame in frames_collected:
-                    wf.writeframes(frame)
+                wf.writeframes(frame)
             mem_file.seek(0)
             yield mem_file.read()
+
     return Response(generate_wav(), mimetype="audio/wav")
 
 
@@ -119,12 +105,6 @@ def toggle_play():
         is_playing.set()
     logger.info("Play toggled at %s", datetime.now())
     return jsonify({"status": "play toggled"})
-
-
-@app.route('/get_queue_length', methods=['GET'])
-def get_queue_length():
-    # logger.info("Queue length checked at %s", datetime.now())
-    return jsonify({"queue_length": frames.qsize()})
 
 
 if __name__ == "__main__":

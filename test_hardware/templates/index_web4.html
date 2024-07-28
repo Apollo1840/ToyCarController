@@ -10,7 +10,6 @@
     <button id="startBtn">Start Recording</button>
     <button id="stopBtn">Stop Recording</button>
     <button id="playBtn">Play Audio</button>
-    <p>Queue Length: <span id="queueLength">0</span></p>
 
     <script>
         let isPlaying = false;
@@ -92,26 +91,6 @@
                 console.error('Error decoding audio data:', error);
             });
         }
-
-        function startQueueLengthUpdate() {
-            queueLengthInterval = setInterval(() => {
-                fetch('/get_queue_length')
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('queueLength').innerText = data.queue_length;
-                    })
-                    .catch(error => console.error('Error:', error));
-            }, 1000);  // Update every second
-        }
-
-        function stopQueueLengthUpdate() {
-            clearInterval(queueLengthInterval);
-        }
-
-        // Start updating the queue length as soon as the page loads
-        window.onload = function() {
-            startQueueLengthUpdate();
-        };
     </script>
 </body>
 </html>

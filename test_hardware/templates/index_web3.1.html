@@ -14,8 +14,9 @@
 
     <script>
         let isPlaying = false;
-        let playInterval;
         let queueLengthInterval;
+        let audioContext;
+        let source;
 
         document.getElementById('startBtn').onclick = function() {
             fetch('/start_recording', {method: 'POST'})
@@ -42,52 +43,56 @@
                     console.log(data);
                     isPlaying = !isPlaying;
                     if (isPlaying) {
-                        startPlayback();
+                        fetchNextAudio();
                     } else {
-                        stopPlayback();
+                        if (source) {
+                            source.stop();
+                        }
                     }
                 })
                 .catch(error => console.error('Error:', error));
         };
 
-        function startPlayback() {
-            playInterval = setInterval(() => {
-                fetch('/get_audio')
-                    .then(response => {
-                        if (response.headers.get("Content-Type") === "text/plain") {
-                            return response.text();
-                        } else {
-                            return response.arrayBuffer();
-                        }
-                    })
-                    .then(data => {
-                        if (typeof data === "string" && data === "Empty") {
-                            console.log("Empty audio buffer");
-                        } else {
-                            playAudio(data);
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-            }, 5000);  // Adjust the interval as needed
-        }
-
-        function stopPlayback() {
-            clearInterval(playInterval);
+        function fetchNextAudio() {
+            fetch('/get_audio')
+                .then(response => {
+                    if (response.headers.get("Content-Type") === "text/plain") {
+                        return response.text();
+                    } else {
+                        return response.arrayBuffer();
+                    }
+                })
+                .then(data => {
+                    if (typeof data === "string" && data === "Empty") {
+                        console.log("Empty audio buffer");
+                    } else {
+                        playAudio(data);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         }
 
         function playAudio(arrayBuffer) {
             console.log('playAudio function called');
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
             console.log('Audio context created');
             audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
                 console.log('Audio data decoded');
-                const source = audioContext.createBufferSource();
+                source = audioContext.createBufferSource();
                 source.buffer = audioBuffer;
                 console.log('Audio buffer source created');
                 source.connect(audioContext.destination);
                 console.log('Audio buffer connected to destination');
                 source.start(0);
-                console.log('> Audio playback started');
+                console.log('Audio playback started');
+                source.onended = () => {
+                    console.log('Audio playback ended');
+                    if (isPlaying) {
+                        fetchNextAudio();
+                    }
+                };
             }, (error) => {
                 console.error('Error decoding audio data:', error);
             });

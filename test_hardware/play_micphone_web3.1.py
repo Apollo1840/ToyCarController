@@ -69,7 +69,7 @@ def callback(in_data, frame_count, time_info, status):
 
 @app.route('/')
 def index():
-    return render_template('index_web3.html')
+    return render_template('index_web3.1.html')
 
 
 @app.route('/start_recording', methods=['POST'])
