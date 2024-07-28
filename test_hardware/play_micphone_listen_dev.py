@@ -16,7 +16,7 @@ FORMAT = pyaudio.paInt16  # Sampling format
 CHANNELS = 1  # Mono
 RATE = 44100  # Sampling rate
 CHUNK_SIZE = 10  # Number of frames to collect before sending
-frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
+frame_queue = deque(maxlen=3)  # Adjust maxlen as needed
 
 is_recording = threading.Event()
 is_playing = threading.Event()
@@ -66,7 +66,7 @@ def callback(in_data, frame_count, time_info, status):
 
 @app.route('/')
 def index():
-    return render_template('index_web5.html')
+    return render_template('index_listen_dev.html')
 
 
 @app.route('/start_recording', methods=['POST'])

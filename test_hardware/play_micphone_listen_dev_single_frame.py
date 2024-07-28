@@ -5,6 +5,8 @@ import threading
 import queue
 import io
 import wave
+import logging
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -13,17 +15,22 @@ CHUNK = 8192
 FORMAT = pyaudio.paInt16  # Sampling format
 CHANNELS = 1  # Mono
 RATE = 44100  # Sampling rate
+CHUNK_SIZE = 10  # Number of frames to collect before sending
 
-frames = queue.Queue(maxsize=100)  # Limited length queue
+frame = None
 is_recording = threading.Event()
+is_playing = threading.Event()
 stream = None
 p = pyaudio.PyAudio()
 recording_thread = None
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def start_recording():
-    global frames, stream
-    frames.queue.clear()
+    global stream
     is_recording.set()
 
     stream = p.open(format=FORMAT,
@@ -34,12 +41,14 @@ def start_recording():
                     stream_callback=callback)
 
     stream.start_stream()
+    logger.info("Recording started at %s", datetime.now())
 
     while is_recording.is_set():
         time.sleep(0.1)
 
     stream.stop_stream()
     stream.close()
+    logger.info("Recording stopped at %s", datetime.now())
 
 
 def stop_recording():
@@ -49,16 +58,18 @@ def stop_recording():
 
 
 def callback(in_data, frame_count, time_info, status):
+    global frame
     if is_recording.is_set():
-        if frames.full():
-            frames.get_nowait()
-        frames.put(in_data)
+        frame = in_data
+        logger.info("Keep recording at %s", datetime.now())
+        if frame is not None:
+            logger.info(f"get frame")
     return (in_data, pyaudio.paContinue)
 
 
 @app.route('/')
 def index():
-    return render_template('index_web2.html')
+    return render_template('index_listen_dev_single_frame.html')
 
 
 @app.route('/start_recording', methods=['POST'])
@@ -77,18 +88,30 @@ def stop():
 
 @app.route('/get_audio', methods=['GET'])
 def get_audio():
+    global frame
+
     def generate_wav():
         with io.BytesIO() as mem_file:
             with wave.open(mem_file, 'wb') as wf:
                 wf.setnchannels(CHANNELS)
                 wf.setsampwidth(p.get_sample_size(FORMAT))
                 wf.setframerate(RATE)
-                while not frames.empty():
-                    wf.writeframes(frames.get())
+                wf.writeframes(frame)
             mem_file.seek(0)
             yield mem_file.read()
+
     return Response(generate_wav(), mimetype="audio/wav")
 
 
+@app.route('/toggle_play', methods=['POST'])
+def toggle_play():
+    if is_playing.is_set():
+        is_playing.clear()
+    else:
+        is_playing.set()
+    logger.info("Play toggled at %s", datetime.now())
+    return jsonify({"status": "play toggled"})
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
