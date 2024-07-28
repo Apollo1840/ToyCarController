@@ -17,7 +17,7 @@ CHANNELS = 1  # Mono
 RATE = 44100  # Sampling rate
 CHUNK_SIZE = 10  # Number of frames to collect before sending
 
-frames = queue.Queue(maxsize=100)  # Limited length queue
+frame = None
 is_recording = threading.Event()
 is_playing = threading.Event()
 stream = None
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def start_recording():
-    global frame, stream
+    global stream
     is_recording.set()
 
     stream = p.open(format=FORMAT,
@@ -58,8 +58,12 @@ def stop_recording():
 
 
 def callback(in_data, frame_count, time_info, status):
-    frame = in_data
-    logger.info("Keep recording at %s", datetime.now())
+    global frame
+    if is_recording.is_set():
+        frame = in_data
+        logger.info("Keep recording at %s", datetime.now())
+        if frame is not None:
+            logger.info(f"get frame")
     return (in_data, pyaudio.paContinue)
 
 
@@ -84,6 +88,8 @@ def stop():
 
 @app.route('/get_audio', methods=['GET'])
 def get_audio():
+    global frame
+
     def generate_wav():
         with io.BytesIO() as mem_file:
             with wave.open(mem_file, 'wb') as wf:
