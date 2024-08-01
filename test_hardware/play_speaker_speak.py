@@ -5,7 +5,8 @@ import pyaudio
 import ffmpeg
 
 app = Flask(__name__)
-audio_file_path = os.path.join('recordings', 'recorded_audio.webm')
+wav_binary = deque(maxlen=3)
+
 
 @app.route('/')
 def index():
@@ -15,16 +16,12 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_audio():
     audio_data = request.files['audio_data']
-    with open(audio_file_path, 'wb') as f:
-        f.write(audio_data.read())
+    wav_binary.append(audio_data)
     return "sound recorded"
 
 
 @app.route('/play', methods=['GET'])
 def play_audio():
-    with open(audio_file_path, 'rb') as f:
-        wav_binary = f.read()
-
     # Use FFmpeg to decode the binary data of the webm file to raw PCM data
     process = (
         ffmpeg
@@ -34,7 +31,7 @@ def play_audio():
     )
 
     # Feed the binary data to ffmpeg's stdin
-    process.stdin.write(wav_binary)
+    process.stdin.write(wav_binary.popleft())
     process.stdin.close()
 
     # Read the first few bytes of the WAV header to determine the sample rate and number of channels
@@ -51,7 +48,7 @@ def play_audio():
     stream = p.open(format=pyaudio.paInt16,
                     channels=channels,
                     rate=sample_rate,
-                    output_device_index=6,
+                    output_device_index=6, 
                     output=True)
 
     chunk_size = 1024

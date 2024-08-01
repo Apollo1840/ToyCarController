@@ -129,7 +129,7 @@ if __name__ == "__main__":
     CHANNELS = 1  # Mono
     RATE = 44100  # Sampling rate
     RECORD_SECONDS = 10  # Duration to record
-    WAVE_OUTPUT_FILENAME = "output.wav"  # Output file name
+    WAVE_OUTPUT_FILENAME = "recordings/output.wav"  # Output file name
 
     frames = []
 

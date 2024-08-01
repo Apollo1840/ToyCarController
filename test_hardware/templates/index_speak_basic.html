@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speak Application</title>
+    <style>
+        .dot {
+            height: 10px;
+            width: 10px;
+            background-color: red;
+            border-radius: 50%;
+            display: none;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>Flask Speak App</h1>
+<button id="speak-btn" onclick="toggleRecording()">Speak</button>
+<span class="dot" id="recording-dot"></span>
+
+<script>
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+
+    function toggleRecording() {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    }
+
+    function startRecording() {
+        fetch('/start_speaking', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+                        // Start recording with a chunk size of 250ms
+                        mediaRecorder.start(250);  // timeSlice in milliseconds
+
+                        updateUI(true);
+
+                        mediaRecorder.ondataavailable = event => {
+                            audioChunks.push(event.data);
+                            sendAudioToServer(event.data); // Send each chunk to the server
+                        };
+
+                        mediaRecorder.onstop = () => {
+                            audioChunks = [];
+                        };
+                    })
+                    .catch(error => console.error('Error accessing media devices.', error));
+            });
+    }
+
+    function stopRecording() {
+        mediaRecorder.stop();
+        mediaRecorder.onstop = () => {
+            // Ensure all audio chunks are sent before ending the session
+            Promise.all(audioChunks.map(chunk => sendAudioToServer(chunk)))
+                .then(() => {
+                    updateUI(false);
+                    fetch('/end_speaking', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data.status);
+                        });
+                });
+        };
+    }
+
+    function updateUI(recording) {
+        const btn = document.getElementById('speak-btn');
+        const dot = document.getElementById('recording-dot');
+
+        if (recording) {
+            btn.textContent = 'Stop';
+            dot.style.display = 'inline-block';
+        } else {
+            btn.textContent = 'Speak';
+            dot.style.display = 'none';
+        }
+
+        isRecording = recording;
+    }
+
+    function sendAudioToServer(audioBlob) {
+        const formData = new FormData();
+        formData.append('audio_data', audioBlob, 'audio.webm');
+
+        fetch('/upload_audio', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data.status);
+        })
+        .catch(error => console.error('There was a problem with the fetch operation:', error));
+    }
+</script>
+</body>
+</html>
