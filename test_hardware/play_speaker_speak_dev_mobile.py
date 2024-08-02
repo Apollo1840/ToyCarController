@@ -10,7 +10,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Define parameters
-CHUNK = 1024
+CHUNK = 2024
 FORMAT = pyaudio.paInt16  # Sampling format
 CHANNELS = 1  # Mono
 RATE = 48000  # Sampling rate
