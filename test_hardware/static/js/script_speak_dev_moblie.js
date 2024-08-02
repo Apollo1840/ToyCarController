@@ -73,19 +73,25 @@ function startRecording() {
             document.getElementById("log").textContent = "running recordAndSend";
 
             let mediaRecorder;
-            let chunks = [];
+            let audioChunks = [];
 
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-            mediaRecorder.ondataavailable = event => {chunks.push(event.data);};
+            mediaRecorder.ondataavailable = event => {audioChunks.push(event.data);};
             mediaRecorder.onstop = () => {
-                document.getElementById("log").textContent = "running recordAndSend(renew)";
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const formData = new FormData();
+                formData.append('audio_data', audioBlob);
+
+                fetch('/upload_audio', {
+                    method: 'POST',
+                    body: formData
+                })
+
                 if (shouldContinue) {
-                    document.getElementById("shouldContinue").textContent = "shouldContinue:true";
-                    recordAndSend(); // Automatically start the next recording
+                    recordAndSend();
                 } else {
-                    document.getElementById("shouldContinue").textContent = "shouldContinue:false(switch)";
                     document.getElementById("log").textContent = "stopped recordAndSend";
-                }
+                };
             };
             mediaRecorder.start(250);
             setTimeout(() => {
