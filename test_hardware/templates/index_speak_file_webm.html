@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recorder</title>
+</head>
+<body>
+<h1>Voice Recorder</h1>
+<button id="recordButton" onclick="toggleRecording()">Record</button>
+<button onclick="playAudio()">Play</button>
+</body>
+
+
+<script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    function toggleRecording() {
+        const recordButton = document.getElementById("recordButton");
+
+        if (recordButton.textContent === "Record") {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                    mediaRecorder.start(250);
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const formData = new FormData();
+                        formData.append('audio_data', audioBlob);
+
+                        fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        }).then(response => console.log('Audio uploaded'));
+
+                        audioChunks = [];
+                    };
+
+                    recordButton.textContent = "Stop";
+                });
+        } else {
+            mediaRecorder.stop();
+            recordButton.textContent = "Record";
+        }
+    }
+
+    function playAudio() {
+    console.log('ready to play');
+        fetch('/play')
+            .then(response => {
+                if (response.ok) {
+                    console.log('Audio is playing');
+                } else {
+                    console.log('Failed to play audio');
+                }
+            });
+    }
+
+
+
+</script>
+</html>

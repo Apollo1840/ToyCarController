@@ -14,7 +14,7 @@ CHUNK = 1024
 FORMAT = pyaudio.paInt16  # Sampling format
 CHANNELS = 1  # Mono
 RATE = 48000  # Sampling rate
-frame_queue = deque(maxlen=20)  # Adjust maxlen as needed
+frame_queue = deque(maxlen=100)  # Adjust maxlen as needed
 
 is_recording = threading.Event()
 stream = None
@@ -30,13 +30,13 @@ def start_recording():
     # record from client and speak
     is_recording.set()
     logger.info("Recording started at %s", datetime.now())
-    time.sleep(2)
+    time.sleep(10)
     while is_recording.is_set():
         if len(frame_queue) == 0:
             time.sleep(0.1)
         else:
-            logger.info("speaking at %s", datetime.now())
             logger.info(f"current queue size: {len(frame_queue)}")
+            logger.info("speaking at %s", datetime.now())
             speak(frame_queue.popleft())
 
     logger.info("Recording stopped at %s", datetime.now())
@@ -73,8 +73,9 @@ def speak(wav_binary):
     while is_recording.is_set():
         data = process.stdout.read(CHUNK)
         if not data:
+            logger.info("no stream at %s", datetime.now())
             break
-        logger.info("streaming at %s", datetime.now())
+        # logger.info("streaming at %s", datetime.now())
         stream.write(data)
 
     # Stop and close the stream
@@ -82,8 +83,14 @@ def speak(wav_binary):
     stream.close()
     p.terminate()
 
+    # Print or log stderr output
+    # stderr_output = process.stderr.read().decode('utf-8')
+    # logger.error(stderr_output)
+
+    # process.stderr.close()
     process.stdout.close()
     process.wait()
+
     logger.info("speak ends at %s", datetime.now())
 
 
@@ -92,9 +99,28 @@ def index():
     return render_template('index_speak.html')
 
 
+# Initialize a counter (could be stored in a database or a more persistent way)
+upload_counter = 0
+
+
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
-    frame_queue.append(request.files['audio_data'].read())
+    global upload_counter
+
+    # Save the uploaded file with a unique name using the counter
+    # Increment the counter for each new upload
+    upload_counter += 1
+    file_path = f'tmp/uploaded_audio_{upload_counter}.webm'
+    audio_data = request.files['audio_data']
+    # audio_data.save(file_path)  # Save to a file for manual inspection
+    with open(file_path, 'wb') as f:
+        f.write(audio_data.read())
+    # Optionally, you can log the file path
+    logger.info(f"Saved audio file: {file_path}")
+
+    # Process the file (e.g., append to the queue for playback)
+    frame_queue.append(audio_data.read())
+
     return "sound recorded"
 
 

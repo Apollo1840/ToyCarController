@@ -51,7 +51,7 @@ def play_audio():
     stream = p.open(format=pyaudio.paInt16,
                     channels=channels,
                     rate=sample_rate,
-                    output_device_index=6,
+                    # output_device_index=6,
                     output=True)
 
     chunk_size = 1024

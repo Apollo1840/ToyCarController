@@ -15,11 +15,9 @@ CHUNK = 8192
 FORMAT = pyaudio.paInt16  # Sampling format
 CHANNELS = 1  # Mono
 RATE = 44100  # Sampling rate
-CHUNK_SIZE = 10  # Number of frames to collect before sending
 frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
 
 is_recording = threading.Event()
-is_playing = threading.Event()
 stream = None
 p = pyaudio.PyAudio()
 recording_thread = None
@@ -43,18 +41,13 @@ def start_recording():
     stream.start_stream()
     logger.info("Recording started at %s", datetime.now())
 
+    # made-dead-loop
     while is_recording.is_set():
         time.sleep(0.1)
 
     stream.stop_stream()
     stream.close()
     logger.info("Recording stopped at %s", datetime.now())
-
-
-def stop_recording():
-    is_recording.clear()
-    if recording_thread is not None:
-        recording_thread.join()
 
 
 def callback(in_data, frame_count, time_info, status):
@@ -67,20 +60,6 @@ def callback(in_data, frame_count, time_info, status):
 @app.route('/')
 def index():
     return render_template('index_listen.html')
-
-
-@app.route('/start_recording', methods=['POST'])
-def start():
-    global recording_thread
-    recording_thread = threading.Thread(target=start_recording)
-    recording_thread.start()
-    return jsonify({"status": "recording started"})
-
-
-@app.route('/stop_recording', methods=['POST'])
-def stop():
-    stop_recording()
-    return jsonify({"status": "recording stopped"})
 
 
 @app.route('/get_audio', methods=['GET'])
@@ -99,25 +78,17 @@ def get_audio():
     return Response(generate_wav(), mimetype="audio/wav")
 
 
-@app.route('/toggle_play', methods=['POST'])
-def toggle_play():
-    if is_playing.is_set():
-        is_playing.clear()
-    else:
-        is_playing.set()
-    logger.info("Play toggled at %s", datetime.now())
-    return jsonify({"status": "play toggled"})
-
-
 @app.route('/listen', methods=['POST'])
 def listen():
+    global recording_thread
     if not is_recording.is_set():
-        start()
-        time.sleep(0.1)
-        toggle_play()
+        recording_thread = threading.Thread(target=start_recording)
+        recording_thread.start()
+        time.sleep(0.1)  # wait queue to fill in with its first frame
     else:
-        stop()
-        toggle_play()
+        is_recording.clear()
+        if recording_thread is not None:
+            recording_thread.join()
     return jsonify({"status": "listening toggled"})
 
 

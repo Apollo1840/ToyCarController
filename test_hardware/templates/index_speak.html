@@ -4,65 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Recorder</title>
+    <style>
+        #recordButton.redDot::after {
+            content: " ";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
-<h1>Voice Recorder</h1>
-<button id="recordButton" onclick="toggleRecording()">Record</button>
-<button onclick="playAudio()">Play</button>
+    <h1>Voice Recorder</h1>
+    <button id="recordButton" onclick="toggleRecording()">Speak</button>
 </body>
-
 
 <script>
     let mediaRecorder;
-    let audioChunks = [];
+    let isRecording = false;
 
     function toggleRecording() {
         const recordButton = document.getElementById("recordButton");
 
-        if (recordButton.textContent === "Record") {
+        if (!isRecording) {
+            // Start recording
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
                     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                     mediaRecorder.start(250);
 
                     mediaRecorder.ondataavailable = event => {
-                        audioChunks.push(event.data);
-                    };
+                        console.log('Data available:', event.data);
+                        const audioBlob = new Blob([event.data], { type: 'audio/webm' });
+                        console.log('Blob size:', audioBlob.size);
 
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         const formData = new FormData();
                         formData.append('audio_data', audioBlob);
 
-                        fetch('/upload', {
+                        fetch('/upload_audio', {
                             method: 'POST',
                             body: formData
-                        }).then(response => console.log('Audio uploaded'));
-
-                        audioChunks = [];
+                        }).then(response => console.log('Audio uploaded:', response.status));
                     };
 
+                    // Start the server-side process for playing audio
+                    fetch('/speak', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => console.log(data.status));
+
                     recordButton.textContent = "Stop";
+                    recordButton.classList.add('redDot');
+                    isRecording = true;
                 });
         } else {
+            // Stop recording
             mediaRecorder.stop();
-            recordButton.textContent = "Record";
+
+            // Stop the server-side process
+            fetch('/speak', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => console.log(data.status));
+
+            recordButton.textContent = "Speak";
+            recordButton.classList.remove('redDot');
+            isRecording = false;
         }
     }
-
-    function playAudio() {
-    console.log('ready to play');
-        fetch('/play')
-            .then(response => {
-                if (response.ok) {
-                    console.log('Audio is playing');
-                } else {
-                    console.log('Failed to play audio');
-                }
-            });
-    }
-
-
-
 </script>
 </html>
