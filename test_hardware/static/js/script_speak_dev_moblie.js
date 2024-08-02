@@ -60,124 +60,63 @@ document.getElementById("recordButton").addEventListener('touchstart', function(
 });
 
 let isRecording = false;
-// let shouldContinue = false;
+let shouldContinue = false;
 
 
 function startRecording() {
     navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
         shouldContinue = true;
-        //console.log("got stream");
+        document.getElementById("shouldContinue").textContent = "shouldContinue:true";
 
         function recordAndSend() {
-
-            if (!shouldContinue) {
-                document.getElementById("log").textContent = "stopped recordAndSend";
-                return;};
-
             document.getElementById("log").textContent = "running recordAndSend";
-            setTimeout(() => {
-                recordAndSend();
-            }, 1000);
-            /*
+
             let mediaRecorder;
             let chunks = [];
 
-            try {
-                console.log("Attempting to set MediaRecorder...");
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
-                console.log("MediaRecorder is successfully set.");
-                console.log("Configuring the MediaRecorder...");
-
-                mediaRecorder.ondataavailable = event => {
-                    console.log("pushing chunks...");
-                    chunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    console.log("media recorder going to close, uploading the audio...");
-                    const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-
-                    const formData = new FormData();
-                    formData.append('audio_data', audioBlob);
-
-                    fetch('/upload_audio', {
-                        method: 'POST',
-                        body: formData
-                    }).then(response => {
-                        console.log('Audio uploaded:', response.status);
-                        if (shouldContinue) {
-                            console.log("--------------------------------");
-                            recordAndSend(); // Automatically start the next recording
-                        }
-                    });
-                };
-
-                console.log("MediaRecorder successfully configured");
-                console.log("Starting the recording...");
-
-                mediaRecorder.start(250);
-
-                // Stop the recording after 250ms
-                setTimeout(() => {
-                    mediaRecorder.stop();
-                }, 1000);
-
-            } catch (error) {
-                console.error("Failed to set or configure MediaRecorder: ", error);
-                alert("An error occurred while setting up the MediaRecorder. Please check the console for details.");
-            }
-            */
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            mediaRecorder.ondataavailable = event => {chunks.push(event.data);};
+            mediaRecorder.onstop = () => {
+                document.getElementById("log").textContent = "running recordAndSend(renew)";
+                if (shouldContinue) {
+                    document.getElementById("shouldContinue").textContent = "shouldContinue:true";
+                    recordAndSend(); // Automatically start the next recording
+                } else {
+                    document.getElementById("shouldContinue").textContent = "shouldContinue:false(switch)";
+                    document.getElementById("log").textContent = "stopped recordAndSend";
+                }
+            };
+            mediaRecorder.start(250);
+            setTimeout(() => {
+                mediaRecorder.stop();
+            }, 1000);
         }
 
-        // Start the first recording
         recordAndSend();
 
-        // Start the server-side process for playing audio
-        fetch('/speak', { method: 'POST' })
-            .then(response => response.json())
-        //.then(data => console.log(data.status));
-    })
-        .then()
-        .catch(error => {
-        console.error("Error accessing media devices: ", error);
-        alert("An error occurred while accessing your microphone. Please check your permissions and try again.");
-    });
+        fetch('/speak', { method: 'POST' }).then(response => response.json())})
 }
 
 function stopRecording() {
-    // console.log("Stopping recording...");
     shouldContinue = false;
+    document.getElementById("shouldContinue").textContent = "shouldContinue:false";
 
     // Stop the server-side process
     fetch('/speak', { method: 'POST' })
         .then(response => response.json())
-    //.then(data => console.log(data.status));
 }
 
 function toggleRecording() {
-    //console.log("clicked button");
-
     const recordButton = document.getElementById("recordButton");
-    // if (!recordButton) {
-    //    console.error("recordButton not found!");
-    //    return;
-    //}
-
     if (!isRecording) {
-        // console.log("ready to start");
-        startRecording();
-        // const recordButton = document.getElementById("recordButton");
         recordButton.textContent = "Stop";
         recordButton.classList.add('redDot');
-        // console.log("button text changed");
+        startRecording();
     } else {
-        stopRecording();
-        // const recordButton = document.getElementById("recordButton");
         recordButton.textContent = "Speak";
         recordButton.classList.remove('redDot');
-
+        stopRecording();
     }
     isRecording = !isRecording;
 }
