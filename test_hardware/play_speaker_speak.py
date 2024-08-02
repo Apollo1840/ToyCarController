@@ -89,7 +89,7 @@ def speak(wav_binary):
 
 @app.route('/')
 def index():
-    return render_template('index_speak.html')
+    return render_template('index_speak_dev.html')
 
 
 @app.route('/upload_audio', methods=['POST'])

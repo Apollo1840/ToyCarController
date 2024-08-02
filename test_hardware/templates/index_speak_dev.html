@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recorder</title>
+    <style>
+        #recordButton.redDot::after {
+            content: " ";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Voice Recorder</h1>
+    <button id="recordButton" onclick="toggleRecording()">Speak</button>
+</body>
+<script>
+    let isRecording = false;
+    let shouldContinue = false;
+
+    function startRecording() {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                shouldContinue = true;
+
+                function recordAndSend() {
+                    if (!shouldContinue) return; // Stop if the flag is set to false
+
+                    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+                    let chunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        chunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+
+                        const formData = new FormData();
+                        formData.append('audio_data', audioBlob);
+
+                        fetch('/upload_audio', {
+                            method: 'POST',
+                            body: formData
+                        }).then(response => {
+                            console.log('Audio uploaded:', response.status);
+                            if (shouldContinue) {
+                                recordAndSend(); // Automatically start the next recording
+                            }
+                        });
+                    };
+
+                    mediaRecorder.start();
+
+                    // Stop the recording after 250ms
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 1000);
+                }
+
+                // Start the first recording
+                recordAndSend();
+
+                // Start the server-side process for playing audio
+                fetch('/speak', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => console.log(data.status));
+            })
+            .catch(error => console.error('Error accessing media devices.', error));
+    }
+
+    function stopRecording() {
+        shouldContinue = false;
+
+        // Stop the server-side process
+        fetch('/speak', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => console.log(data.status));
+    }
+
+    function toggleRecording() {
+        const recordButton = document.getElementById("recordButton");
+
+        if (!isRecording) {
+            startRecording();
+            recordButton.textContent = "Stop";
+            recordButton.classList.add('redDot');
+            isRecording = true;
+        } else {
+            stopRecording();
+            recordButton.textContent = "Speak";
+            recordButton.classList.remove('redDot');
+            isRecording = false;
+        }
+    }
+</script>
+
+</html>

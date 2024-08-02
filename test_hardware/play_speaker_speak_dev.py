@@ -30,7 +30,7 @@ def start_recording():
     # record from client and speak
     is_recording.set()
     logger.info("Recording started at %s", datetime.now())
-    time.sleep(10)
+    # time.sleep(10)
     while is_recording.is_set():
         if len(frame_queue) == 0:
             time.sleep(0.1)
@@ -96,7 +96,7 @@ def speak(wav_binary):
 
 @app.route('/')
 def index():
-    return render_template('index_speak.html')
+    return render_template('index_speak_dev.html')
 
 
 # Initialize a counter (could be stored in a database or a more persistent way)
@@ -109,14 +109,14 @@ def upload_audio():
 
     # Save the uploaded file with a unique name using the counter
     # Increment the counter for each new upload
-    upload_counter += 1
-    file_path = f'tmp/uploaded_audio_{upload_counter}.webm'
     audio_data = request.files['audio_data']
+    # upload_counter += 1
+    # file_path = f'tmp/uploaded_audio_{upload_counter}.webm'
     # audio_data.save(file_path)  # Save to a file for manual inspection
-    with open(file_path, 'wb') as f:
-        f.write(audio_data.read())
+    # with open(file_path, 'wb') as f:
+    #    f.write(audio_data.read())
     # Optionally, you can log the file path
-    logger.info(f"Saved audio file: {file_path}")
+    # logger.info(f"Saved audio file: {file_path}")
 
     # Process the file (e.g., append to the queue for playback)
     frame_queue.append(audio_data.read())
