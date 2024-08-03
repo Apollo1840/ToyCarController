@@ -106,13 +106,12 @@ upload_counter = 0
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
     global upload_counter
+    audio_data = request.files['audio_data']
 
     # Save the uploaded file with a unique name using the counter
     # Increment the counter for each new upload
-    audio_data = request.files['audio_data']
     # upload_counter += 1
     # file_path = f'tmp/uploaded_audio_{upload_counter}.webm'
-    # audio_data.save(file_path)  # Save to a file for manual inspection
     # with open(file_path, 'wb') as f:
     #    f.write(audio_data.read())
     # Optionally, you can log the file path

@@ -78,20 +78,23 @@ function startRecording() {
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
             mediaRecorder.ondataavailable = event => {audioChunks.push(event.data);};
             mediaRecorder.onstop = () => {
+                setTimeout(() => {
+                    if (shouldContinue) {
+                        recordAndSend();
+                    } else {
+                        document.getElementById("log").textContent = "stopped recordAndSend";
+                    };
+                }, 0)
+
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const formData = new FormData();
                 formData.append('audio_data', audioBlob);
-
                 fetch('/upload_audio', {
                     method: 'POST',
                     body: formData
                 })
 
-                if (shouldContinue) {
-                    recordAndSend();
-                } else {
-                    document.getElementById("log").textContent = "stopped recordAndSend";
-                };
+
             };
             mediaRecorder.start(250);
             setTimeout(() => {
