@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recorder dev</title>
+    <style>
+        #recordButton.redDot::after {
+            content: " ";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+    </style>
+</head>
+<body>
+<h1>Voice Recorder Dev Mobile</h1>
+<button id="recordButton">Speak</button>
+<p id="log">log</p>
+<p id="shouldContinue">shouldContinue:false</p>
+</body>
+<script src="{{ url_for('static', filename='js/script_speak.js') }}"></script>
+
+</html>

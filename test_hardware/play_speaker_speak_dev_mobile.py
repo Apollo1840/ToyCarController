@@ -70,6 +70,12 @@ def speak(wav_binary):
                     # output_device_index=6,
                     output=True)
 
+    # output_data = process.stdout.read()
+    # total_length = len(output_data)
+    # logger.info(f"Total length of process stdout: {total_length} bytes")
+    # stream.write(output_data[128:])
+
+    process.stdout.read(128)  # remove a artifact noise
     while is_recording.is_set():
         data = process.stdout.read(CHUNK)
         if not data:

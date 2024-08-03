@@ -10,11 +10,11 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Define parameters
-CHUNK = 2024
+CHUNK = 1024
 FORMAT = pyaudio.paInt16  # Sampling format
 CHANNELS = 1  # Mono
 RATE = 48000  # Sampling rate
-frame_queue = deque(maxlen=100)  # Adjust maxlen as needed
+frame_queue = deque(maxlen=20)  # Adjust maxlen as needed
 
 is_recording = threading.Event()
 stream = None
@@ -30,13 +30,13 @@ def start_recording():
     # record from client and speak
     is_recording.set()
     logger.info("Recording started at %s", datetime.now())
-    # time.sleep(10)
+    time.sleep(2)
     while is_recording.is_set():
         if len(frame_queue) == 0:
             time.sleep(0.1)
         else:
-            logger.info(f"current queue size: {len(frame_queue)}")
             logger.info("speaking at %s", datetime.now())
+            logger.info(f"current queue size: {len(frame_queue)}")
             speak(frame_queue.popleft())
 
     logger.info("Recording stopped at %s", datetime.now())
@@ -70,18 +70,11 @@ def speak(wav_binary):
                     # output_device_index=6,
                     output=True)
 
-    # output_data = process.stdout.read()
-    # total_length = len(output_data)
-    # logger.info(f"Total length of process stdout: {total_length} bytes")
-    # stream.write(output_data[128:])
-
-    process.stdout.read(128)  # remove a artifact noise
     while is_recording.is_set():
         data = process.stdout.read(CHUNK)
         if not data:
-            logger.info("no stream at %s", datetime.now())
             break
-        # logger.info("streaming at %s", datetime.now())
+        logger.info("streaming at %s", datetime.now())
         stream.write(data)
 
     # Stop and close the stream
@@ -91,27 +84,22 @@ def speak(wav_binary):
 
     process.stdout.close()
     process.wait()
-
     logger.info("speak ends at %s", datetime.now())
 
 
 @app.route('/')
 def index():
-    return render_template('index_speak.html')
+    return render_template('index_speak_pc.html')
 
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
-    global upload_counter
-    audio_data = request.files['audio_data']
-    frame_queue.append(audio_data.read())
-
+    frame_queue.append(request.files['audio_data'].read())
     return "sound recorded"
 
 
 @app.route('/speak', methods=['POST'])
 def listen():
-    logger.info("speak button clicked at %s", datetime.now())
     global recording_thread
     if not is_recording.is_set():
         recording_thread = threading.Thread(target=start_recording)
@@ -124,4 +112,4 @@ def listen():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', ssl_context=('cert.pem', 'key.pem'), port=5000)
+    app.run(host='0.0.0.0', port=5000)

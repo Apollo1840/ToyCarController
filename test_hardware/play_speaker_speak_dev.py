@@ -96,7 +96,7 @@ def speak(wav_binary):
 
 @app.route('/')
 def index():
-    return render_template('index_speak_dev.html')
+    return render_template('index_speak_pc.html')
 
 
 # Initialize a counter (could be stored in a database or a more persistent way)
