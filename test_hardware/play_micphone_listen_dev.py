@@ -15,7 +15,6 @@ CHUNK = 8192
 FORMAT = pyaudio.paInt16  # Sampling format
 CHANNELS = 1  # Mono
 RATE = 44100  # Sampling rate
-CHUNK_SIZE = 10  # Number of frames to collect before sending
 frame_queue = deque(maxlen=3)  # Adjust maxlen as needed
 
 is_recording = threading.Event()

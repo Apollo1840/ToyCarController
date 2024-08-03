@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recorder</title>
+    <style>
+        .recording-indicator {
+            display: none;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .recording {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<h1>Audio Recorder</h1>
+<button id="listenBtn">Listen</button>
+<div id="recordingIndicator" class="recording-indicator"></div>
+
+<script src="{{ url_for('static', filename='js/script_listen_speak.js') }}"></script>
+
+</body>
+</html>

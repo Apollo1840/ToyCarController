@@ -11,15 +11,17 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Define parameters
-CHUNK = 8192
 FORMAT = pyaudio.paInt16  # Sampling format
-CHANNELS = 1  # Mono
-RATE = 44100  # Sampling rate
-frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
+
+RECORD_CHUNK_SIZE = 8192
+RECORD_SAMPLE_WIDTH = 2
+RECORD_CHANNELS = 1  # Mono
+RECORD_RATE = 44100  # Sampling rate
+
+recording_frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
 
 is_recording = threading.Event()
-stream = None
-p = pyaudio.PyAudio()
+
 recording_thread = None
 
 # Configure logging
@@ -28,40 +30,38 @@ logger = logging.getLogger(__name__)
 
 
 def start_recording():
-    global stream
+    def callback(in_data, frame_count, time_info, status):
+        if is_recording.is_set():
+            recording_frame_queue.append(in_data)
+            logger.info("Keep recording at %s", datetime.now())
+        return (in_data, pyaudio.paContinue)
+
+    p = pyaudio.PyAudio()
     is_recording.set()
 
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    # input_device_index=0,
-                    frames_per_buffer=CHUNK,
-                    stream_callback=callback)
+    recording_stream = p.open(format=FORMAT,
+                              channels=RECORD_CHANNELS,
+                              rate=RECORD_RATE,
+                              input=True,
+                              input_device_index=0,
+                              frames_per_buffer=RECORD_CHUNK_SIZE,
+                              stream_callback=callback)
 
-    stream.start_stream()
+    recording_stream.start_stream()
     logger.info("Recording started at %s", datetime.now())
 
     # made-dead-loop
     while is_recording.is_set():
         time.sleep(0.1)
 
-    stream.stop_stream()
-    stream.close()
+    recording_stream.stop_stream()
+    recording_stream.close()
     logger.info("Recording stopped at %s", datetime.now())
-
-
-def callback(in_data, frame_count, time_info, status):
-    if is_recording.is_set():
-        frame_queue.append(in_data)
-        logger.info("Keep recording at %s", datetime.now())
-        logger.info(f"queue length: {len(frame_queue)}")
-    return (in_data, pyaudio.paContinue)
 
 
 @app.route('/')
 def index():
-    return render_template('index_listen.html')
+    return render_template('index_listen_speak.html')
 
 
 @app.route('/get_audio', methods=['GET'])
@@ -69,11 +69,11 @@ def get_audio():
     def generate_wav():
         with io.BytesIO() as mem_file:
             with wave.open(mem_file, 'wb') as wf:
-                wf.setnchannels(CHANNELS)
-                wf.setsampwidth(p.get_sample_size(FORMAT))
-                wf.setframerate(RATE)
-                while frame_queue:
-                    wf.writeframes(frame_queue.popleft())
+                wf.setnchannels(RECORD_CHANNELS)
+                wf.setsampwidth(RECORD_SAMPLE_WIDTH)
+                wf.setframerate(RECORD_RATE)
+                while recording_frame_queue:
+                    wf.writeframes(recording_frame_queue.popleft())
             mem_file.seek(0)
             yield mem_file.read()
 
@@ -86,7 +86,7 @@ def listen():
     if not is_recording.is_set():
         recording_thread = threading.Thread(target=start_recording)
         recording_thread.start()
-        time.sleep(0.5)  # wait queue to fill in with its first frame
+        time.sleep(0.1)  # wait queue to fill in with its first frame
     else:
         is_recording.clear()
         if recording_thread is not None:
@@ -95,4 +95,5 @@ def listen():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', ssl_context=('cert.pem', 'key.pem'), port=5000)
+

@@ -38,41 +38,43 @@
         fetch('/listen', {method: 'POST'})
             .then(response => response.json())
             .then(data => {
-                console.log(data);
-                if (isListening) {
-                    fetchNextAudio();
-                } else {
-                    if (source) {
-                        source.stop();
-                    }
+            console.log(data);
+            if (isListening) {
+                fetchNextAudio();
+            } else {
+                if (source) {
+                    source.stop();
                 }
-            })
+            }
+        })
             .catch(error => console.error('Error:', error));
     };
 
     function fetchNextAudio() {
         fetch('/get_audio')
             .then(response => {
-                if (response.headers.get("Content-Type") === "text/plain") {
-                    return response.text();
-                } else {
-                    return response.arrayBuffer();
-                }
-            })
+            console.log(response.headers.get("Content-Type"))
+            if (response.headers.get("Content-Type") === "text/plain") {
+                return response.text();
+            } else {
+                return response.arrayBuffer();
+            }
+        })
             .then(data => {
-                if (typeof data === "string" && data === "Empty") {
-                    console.log("Empty audio buffer");
-                } else {
-                    audioBufferQueue.push(data);
-                    if (audioBufferQueue.length === 1) {
-                        playAudio();
-                    }
+            if (typeof data === "string" && data === "Empty") {
+                console.log("Empty audio buffer");
+            } else {
+                audioBufferQueue.push(data);
+                if (audioBufferQueue.length === 1) {
+                    playAudio();
                 }
-            })
+            }
+        })
             .catch(error => console.error('Error:', error));
     }
 
     function playAudio() {
+        console.log("playing audio...")
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
