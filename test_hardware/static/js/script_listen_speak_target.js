@@ -30,28 +30,41 @@ function fetchNextAudio() {
             return response.text();
         } else {
             return response.arrayBuffer();
-        }})
+        }
+    })
         .then(data => {
         if (typeof data === "string" && data === "Empty") {
             console.log("Empty audio buffer");
         } else {
-            const arrayBuffer = data;
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioBufferQueue.push(data);
+            if (audioBufferQueue.length === 1) {
+                playAudio();
             }
-            if (isListening){audioContext.decodeAudioData(arrayBuffer,
-                (audioBuffer) => {
-                    source = audioContext.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(audioContext.destination);
-                    source.start(0);
-                    source.onended = () => {if (isListening) {fetchNextAudio();}};
-                },
-                (error) => {console.error('Error decoding audio data:', error);}
-            );}
-
-        }}
-    ).catch(error => console.error('Error:', error));
+        }
+    })
+        .catch(error => console.error('Error:', error));
 }
 
-
+function playAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioBufferQueue.length === 0 || !isListening) {
+        return;
+    }
+    const arrayBuffer = audioBufferQueue.shift();
+    audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+        source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+        source.onended = () => {
+            if (isListening) {
+                playAudio();
+                fetchNextAudio();
+            }
+        };
+    }, (error) => {
+        console.error('Error decoding audio data:', error);
+    });
+}

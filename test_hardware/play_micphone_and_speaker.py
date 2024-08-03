@@ -31,9 +31,9 @@ logger = logging.getLogger(__name__)
 
 def start_recording():
     def callback(in_data, frame_count, time_info, status):
-        if is_recording.is_set():
-            recording_frame_queue.append(in_data)
-            logger.info("Keep recording at %s", datetime.now())
+        # if is_recording.is_set():
+        recording_frame_queue.append(in_data)
+        logger.info("Keep recording at %s", datetime.now())
         return (in_data, pyaudio.paContinue)
 
     p = pyaudio.PyAudio()
@@ -43,7 +43,7 @@ def start_recording():
                               channels=RECORD_CHANNELS,
                               rate=RECORD_RATE,
                               input=True,
-                              input_device_index=0,
+                              # input_device_index=0,
                               frames_per_buffer=RECORD_CHUNK_SIZE,
                               stream_callback=callback)
 
@@ -86,7 +86,9 @@ def listen():
     if not is_recording.is_set():
         recording_thread = threading.Thread(target=start_recording)
         recording_thread.start()
-        time.sleep(0.1)  # wait queue to fill in with its first frame
+
+        # wait queue to fill in with its first frame, because fetch audio is after the return of this API
+        time.sleep(0.5)
     else:
         is_recording.clear()
         if recording_thread is not None:
