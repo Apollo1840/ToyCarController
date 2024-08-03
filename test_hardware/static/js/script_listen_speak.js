@@ -1,27 +1,39 @@
 let isListening = false;
-let audioBufferQueue = [];
+let isSpeaking = false;
+
 let audioContext;
 let source;
+
+document.getElementById("speakBtn").onclick = function() {
+    isSpeaking = !isSpeaking;
+    document.getElementById('speakBtn').innerText = isSpeaking ? 'Stop' : 'Speak';
+    document.getElementById('speakingIndicator').style.display = isSpeaking ? 'inline-block' : 'none';
+
+    console.log("clicked speak button")
+    fetch('/speak', {method: 'POST'})
+        .then(response => {console.log("get response"); response.json()})
+        .then(data => {console.log(data);
+        if (isSpeaking) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {sendNextAudio(stream);})
+        }
+    }).catch(error => console.error('Error:', error));
+}
+
 
 document.getElementById('listenBtn').onclick = function() {
     isListening = !isListening;
     document.getElementById('listenBtn').innerText = isListening ? 'Stop' : 'Listen';
     document.getElementById('recordingIndicator').style.display = isListening ? 'inline-block' : 'none';
 
+    console.log("clicked listen button")
     fetch('/listen', {method: 'POST'})
         .then(response => response.json())
-        .then(data => {
-        console.log(data);
-        if (isListening) {
-            fetchNextAudio();
-        } else {
-            if (source) {
-                source.stop();
-            }
-        }
-    })
-        .catch(error => console.error('Error:', error));
-};
+        .then(data => {console.log(data);
+        if (isListening) {fetchNextAudio();}
+        else {if (source) {source.stop();}}
+    }).catch(error => console.error('Error:', error));
+}
 
 function fetchNextAudio() {
     fetch('/get_audio')
@@ -53,5 +65,37 @@ function fetchNextAudio() {
         }}
     ).catch(error => console.error('Error:', error));
 }
+
+
+function sendNextAudio(stream) {
+
+    let mediaRecorder;
+    let audioChunks = [];
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    mediaRecorder.ondataavailable = event => {audioChunks.push(event.data);};
+    mediaRecorder.onstop = () => {
+        setTimeout(() => {
+            if (isSpeaking) {
+                sendNextAudio(stream);
+            };
+        }, 0)
+
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio_data', audioBlob);
+        fetch('/upload_audio', {
+            method: 'POST',
+            body: formData
+        })
+    };
+    mediaRecorder.start(250);
+    setTimeout(() => {
+        mediaRecorder.stop();
+    }, 1000);
+}
+
+
+
 
 

@@ -17,12 +17,31 @@
         .recording {
             display: inline-block;
         }
+
+
+        .speaking-indicator {
+            display: none;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .speaking {
+            display: inline-block;
+        }
+
     </style>
 </head>
 <body>
-<h1>Audio Recorder</h1>
+<h1>Remote Communication</h1>
 <button id="listenBtn">Listen</button>
 <div id="recordingIndicator" class="recording-indicator"></div>
+<p></p>
+<button id="speakBtn">Speak</button>
+<div id="speakingIndicator" class="speaking-indicator"></div>
+
 
 <script src="{{ url_for('static', filename='js/script_listen_speak.js') }}"></script>
 
