@@ -1,0 +1,133 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+h1, h2 {
+    margin: 20px 0;
+    font-size: 24px;
+}
+
+.video-container {
+    width: 100%;
+    max-width: 640px;
+    padding: 10px;
+}
+
+img {
+    width: 100%;
+    height: auto;
+    border: 2px solid #007BFF;
+    border-radius: 10px;
+}
+
+.control-panels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 640px;
+    padding: 20px;
+    box-sizing: border-box;
+    flex-wrap: wrap; /* Allow wrapping */
+}
+
+.car-control-panel, .camera-control-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 48%;
+}
+
+button {
+    font-size: 16px; /* Smaller font size */
+    margin: 5px;
+    padding: 8px; /* Smaller padding */
+    width: 50px; /* Smaller width */
+    height: 50px; /* Smaller height */
+    border-radius: 10px;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+}
+
+button:active {
+    background-color: #0056b3;
+}
+
+button i {
+    font-size: 18px; /* Smaller icon size */
+}
+
+.horizontal-buttons, .horizontal-camera-buttons {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.tracking-mode {
+    background-color: #28a745;
+}
+
+.disabled-button {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.recenter-mode {
+    background-color: #ffc107;
+}
+
+@media (max-width: 768px) {
+    .control-panels {
+        flex-direction: row; /* Ensure panels are side by side */
+        flex-wrap: nowrap; /* Prevent wrapping */
+        justify-content: space-around; /* Space panels evenly */
+    }
+
+    .car-control-panel, .camera-control-panel {
+        width: 45%;
+        margin-bottom: 20px;
+    }
+
+    button {
+        font-size: 12px; /* Smaller font size for mobile */
+        width: 40px; /* Smaller width for mobile */
+        height: 40px; /* Smaller height for mobile */
+    }
+
+    button i {
+        font-size: 14px; /* Smaller icon size for mobile */
+    }
+}
+
+        .recording-indicator {
+            display: none;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .recording {
+            display: inline-block;
+        }
+
+
+        .speaking-indicator {
+            display: none;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .speaking {
+            display: inline-block;
+        }
