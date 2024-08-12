@@ -100,7 +100,7 @@ def try_microphone(filename, frames_per_buffer=8192):
 
 
 # Play back the recorded audio
-def play_audio(filename):
+def play_audio(filename, chunk_size=8192):
     with wave.open(filename, 'rb') as wf:
         p = pyaudio.PyAudio()
 
@@ -109,11 +109,11 @@ def play_audio(filename):
                         rate=wf.getframerate(),
                         output=True)
 
-        data = wf.readframes(CHUNK)
+        data = wf.readframes(chunk_size)
 
         while data:
             stream.write(data)
-            data = wf.readframes(CHUNK)
+            data = wf.readframes(chunk_size)
 
         stream.stop_stream()
         stream.close()
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     try_microphone(WAVE_OUTPUT_FILENAME, frames_per_buffer=args.chunk)
 
     print("Playing back the recorded audio...")
-    play_audio(WAVE_OUTPUT_FILENAME)
+    play_audio(WAVE_OUTPUT_FILENAME, chunk_size=args.chunk)
 
     exit()
 
