@@ -10,14 +10,14 @@ class MotorController:
         self.speed = speed
 
         self.target_throttle = {
-            "forward": {"motor1": -1.0 * self.speed,
-                        "motor2": 1.0 * self.speed,
-                        "motor3": -1.0 * self.speed,
-                        "motor4": 1.0 * self.speed},
-            "backward": {"motor1": 1.0 * self.speed,
-                         "motor2": -1.0 * self.speed,
-                         "motor3": 1.0 * self.speed,
-                         "motor4": -1.0 * self.speed},
+            "forward": {"motor1": 1.0 * self.speed,
+                        "motor2": -1.0 * self.speed,
+                        "motor3": 1.0 * self.speed,
+                        "motor4": -1.0 * self.speed},
+            "backward": {"motor1": -1.0 * self.speed,
+                         "motor2": 1.0 * self.speed,
+                         "motor3": -1.0 * self.speed,
+                         "motor4": 1.0 * self.speed},
             "left": {"motor1": 1.0 * self.speed,
                      "motor2": -1.0 * self.speed,
                      "motor3": -1.0 * self.speed,
