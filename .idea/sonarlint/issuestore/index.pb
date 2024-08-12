@@ -37,15 +37,5 @@ Z
 *test_hardware/templates/index_listen2.html,5/8/58ac61466c639c67f1d1c86b0e56a086109d6862
 X
 (test_hardware/static/js/script_listen.js,0/a/0a17f89608f5d889cb4f85c74179a48b95c4224a
-X
-(test_hardware/templates/index_speak.html,c/6/c6357c71f147532b1c7e8f007810b4120b04e72b
 S
 #test_hardware/play_speaker_speak.py,9/f/9f74a5b348f3f868dccdc38485c1829d12a32ca2
-W
-'test_hardware/static/js/script_speak.js,4/1/417f290e06def792183626b603a3e2f03cd4de5a
-_
-/test_hardware/templates/index_listen_speak.html,7/c/7cf957f3f7656554cdb4a08f2edae0a3330a42a4
-Z
-*test_hardware/play_micphone_and_speaker.py,0/1/01e56d7da1f8bcdfc0d2d7bfad0a7768689092b3
-^
-.test_hardware/static/js/script_listen_speak.js,c/1/c1197e608866a4957c744e90360a891c3541e641
