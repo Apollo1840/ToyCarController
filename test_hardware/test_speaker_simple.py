@@ -73,4 +73,4 @@ if __name__ == "__main__":
 
     wav_file_path = os.path.join("recordings", args.output)  # Output file name
     play_wav_file(wav_file_path)
-    play_wav_file_v(wav_file_path)
+    play_wav_file_v(wav_file_path, volume=5.0)
