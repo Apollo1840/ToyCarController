@@ -56,13 +56,12 @@ def test_microphone(device_index, duration=1):
 
 
 def try_microphone(filename, frames_per_buffer=8192):
+    global frames
     # Define parameters
     FORMAT = pyaudio.paInt16  # Sampling format
     CHANNELS = 1  # Mono
     RATE = 44100  # Sampling rate
     RECORD_SECONDS = 10  # Duration to record
-
-    frames = []
 
     # Initialize PyAudio
     p = pyaudio.PyAudio()
@@ -98,8 +97,6 @@ def try_microphone(filename, frames_per_buffer=8192):
     wf.setframerate(RATE)
     wf.writeframes(b''.join(frames))
     wf.close()
-
-    return frames
 
 
 # Play back the recorded audio
@@ -185,7 +182,8 @@ if __name__ == "__main__":
     test_microphone(device_index)
 
     print("try_recording...")
-    frames = try_microphone(WAVE_OUTPUT_FILENAME, frames_per_buffer=args.chunk)
+    frames = []
+    try_microphone(WAVE_OUTPUT_FILENAME, frames_per_buffer=args.chunk)
 
     print("Playing back the recorded audio...")
     play_audio(WAVE_OUTPUT_FILENAME)
