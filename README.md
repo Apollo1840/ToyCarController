@@ -87,7 +87,7 @@ and a working space with wifi access.
 3) Run Command (Accordingly):
 
     ```bash
-    # Modify the following IP based on your Router IP.
+    # Modify the following IP based on your Router IP. (replace last .1 to .0)
     nmap -sn 192.168.1.0/24
     ```
 

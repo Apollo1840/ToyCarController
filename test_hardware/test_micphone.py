@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import argparse
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
