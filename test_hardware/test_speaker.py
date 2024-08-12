@@ -1,7 +1,11 @@
 import os
 import wave
+import json
+import subprocess
 import pyaudio
+import vlc
 from pydub import AudioSegment
+import ffmpeg
 
 
 def play_wav_file(wav_file_path):

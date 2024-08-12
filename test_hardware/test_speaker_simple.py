@@ -1,6 +1,9 @@
 import os
 import wave
+import numpy as np
 import pyaudio
+import argparse
+
 
 def play_wav_file(wav_file_path):
     with wave.open(wav_file_path, 'rb') as wf:
