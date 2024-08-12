@@ -244,4 +244,4 @@ def stop_recenter():
 """
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', ssl_context=('cert.pem', 'key.pem'), port=5000)
+    app.run(debug=True, host='0.0.0.0', ssl_context=('test_hardware/cert.pem', 'test_hardware/key.pem'), port=5000)
