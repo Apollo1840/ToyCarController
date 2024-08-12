@@ -48,6 +48,7 @@ def play_wav_file_v(filename, chunk_size=8192, volume=2.0):
 
         data = wf.readframes(chunk_size)
 
+        print(f"Playing...from {wav_file_path}")
         while data:
             # Convert byte data to numpy array
             audio_data = np.frombuffer(data, dtype=np.int16)
@@ -73,4 +74,4 @@ if __name__ == "__main__":
 
     wav_file_path = os.path.join("recordings", args.output)  # Output file name
     play_wav_file(wav_file_path)
-    play_wav_file_v(wav_file_path, volume=5.0)
+    play_wav_file_v(wav_file_path, volume=10.0)
