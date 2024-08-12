@@ -1,8 +1,6 @@
 import os
 import wave
 import pyaudio
-from pydub import AudioSegment
-
 
 def play_wav_file(wav_file_path):
     with wave.open(wav_file_path, 'rb') as wf:
