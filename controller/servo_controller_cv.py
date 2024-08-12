@@ -121,10 +121,12 @@ class FaceDetector:
         self.frame_rate = frame_rate
         self.faces = []
         self.faces_lock = threading.Lock()
+        self.is_detecting = threading.Event()
 
     def detect_faces(self):
         last_detection_time = 0
-        while True:
+        self.is_detecting.set()
+        while self.is_detecting.is_set():
             current_time = time.time()
             if current_time - last_detection_time >= 1 / self.frame_rate:
                 success, frame = self.camera.read()

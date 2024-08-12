@@ -4,16 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote Controllable Car</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles2.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script2.js') }}"></script>
 </head>
 <body>
+
 <h1>Camera Stream</h1>
 <div class="video-container">
     <img src="/video_feed" alt="Camera Stream">
 </div>
+
+<button id="listenBtn">Listen</button>
+<div id="recordingIndicator" class="recording-indicator"></div>
+<p></p>
+<button id="speakBtn">Speak</button>
+<div id="speakingIndicator" class="speaking-indicator"></div>
+
 <div class="control-panels">
     <div class="car-control-panel">
         <h4>Car Control</h4>
