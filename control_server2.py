@@ -134,6 +134,7 @@ def index():
 
 @app.route('/video_feed')
 def video_feed():
+    print("feeding video...")
     return Response(face_detector.generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 

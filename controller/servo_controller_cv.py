@@ -151,6 +151,8 @@ class FaceDetector:
             success, frame = self.camera.read()
             if not success:
                 break
+            else:
+                print("success")
 
             ul, lr = self.face_box()
             if ul and lr:
