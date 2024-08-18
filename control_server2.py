@@ -102,7 +102,7 @@ def start_speaking():
             else:
                 # logger.info(f"current queue size: {len(speaking_frame_queue)}")
                 audio_data = np.frombuffer(speaking_audio_queue.popleft(), dtype=np.int16)
-                audio_data = np.clip(audio_data * 8, -32768, 32767)
+                audio_data = np.clip(audio_data * 5, -32768, 32767)
                 speak_stream.write(audio_data.astype(np.int16).tobytes())
 
                 # speak_stream.write(speaking_audio_queue.popleft())
