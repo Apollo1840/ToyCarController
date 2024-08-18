@@ -40,7 +40,8 @@ speaking_thread = None
 
 def webm_to_pyaudio():
     global speaking_frame_queue, speaking_audio_queue
-    while is_speaking.is_set():
+
+    while True:
         if len(speaking_frame_queue) == 0:
             time.sleep(0.1)
             continue
@@ -66,7 +67,7 @@ def webm_to_pyaudio():
         process.stdout.close()
         process.wait()
 
-    logger.info("webm_to_pyaudio thread exiting.")
+        logger.info("webm_to_pyaudio thread working.")
 
 
 def start_speaking():
