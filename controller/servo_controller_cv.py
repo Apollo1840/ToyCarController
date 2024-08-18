@@ -116,8 +116,16 @@ class TrackableServoController(ServoController):
 class FaceDetector:
     def __init__(self, camera_index=0, cascade_path=cv2.data.haarcascades + 'haarcascade_frontalface_default.xml',
                  frame_rate=5):
+
         self.camera = cv2.VideoCapture(camera_index)
+        if not self.camera.isOpened():
+            raise ValueError(f"Unable to open camera with index {camera_index}")
+
+        # Load the face cascade
         self.face_cascade = cv2.CascadeClassifier(cascade_path)
+        if self.face_cascade.empty():
+            raise ValueError(f"Unable to load cascade file from path {cascade_path}")
+
         self.frame_rate = frame_rate
         self.faces = []
         self.faces_lock = threading.Lock()
@@ -151,8 +159,8 @@ class FaceDetector:
             success, frame = self.camera.read()
             if not success:
                 break
-            else:
-                print("success")
+            # else:
+            #    print("success")
 
             ul, lr = self.face_box()
             if ul and lr:
