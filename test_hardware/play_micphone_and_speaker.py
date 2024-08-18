@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, jsonify, Response
 import time
+import numpy as np
 import pyaudio
 import threading
 from collections import deque
@@ -27,7 +28,7 @@ SPEAK_CHUNK_SIZE = 2024
 SPEAK_RATE = 48000  # Sampling rate
 
 recording_frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
-speaking_frame_queue = deque(maxlen=100)  # Adjust maxlen as needed
+speaking_frame_queue = deque(maxlen=10)  # Adjust maxlen as needed
 
 is_recording = threading.Event()
 is_speaking = threading.Event()
@@ -54,6 +55,10 @@ def start_speaking():
                 # logger.info("no stream at %s", datetime.now())
                 break
             stream.write(data)
+
+            # audio_data = np.frombuffer(data, dtype=np.int16)
+            # audio_data = np.clip(audio_data * 2, -32768, 32767)
+            # stream.write(audio_data.astype(np.int16).tobytes())
 
         process.stdout.close()
         process.wait()
