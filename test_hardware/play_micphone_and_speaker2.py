@@ -85,12 +85,16 @@ def start_speaking():
         logger.info("Speaking started at %s", datetime.now())
 
         while is_speaking.is_set():
-            logger.info("speaking...")
+            # logger.info("speaking...")
             if len(speaking_audio_queue) == 0:
                 time.sleep(0.1)
             else:
                 # logger.info(f"current queue size: {len(speaking_frame_queue)}")
-                speak_stream.write(speaking_audio_queue.popleft())
+                audio_data = np.frombuffer(speaking_audio_queue.popleft(), dtype=np.int16)
+                audio_data = np.clip(audio_data * 10, -32768, 32767)
+                speak_stream.write(audio_data.astype(np.int16).tobytes())
+
+                # speak_stream.write(speaking_audio_queue.popleft())
     finally:
         # Stop and close the stream 
         speak_stream.stop_stream()
