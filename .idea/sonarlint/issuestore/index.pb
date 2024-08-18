@@ -5,8 +5,6 @@ T
 $test_hardware/play_micphone_basic.py,1/3/13914489ae35bdcb91c32b33bcaad877a02b298d
 N
 test_hardware/play_micphone.py,d/a/dad626de6359b8486a45fb3e0c76d022019a74c8
-S
-#test_hardware/play_speaker_basic.py,1/5/156eec83c9c3daf11edae88f8cea151f753a0e98
 ^
 .test_hardware/templates/index_speak_basic.html,8/5/852b666c2fd1cb244f4ae607aa4b85b3c640b964
 j
