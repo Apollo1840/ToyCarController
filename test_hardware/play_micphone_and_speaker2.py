@@ -29,7 +29,7 @@ SPEAK_RATE = 48000  # Sampling rate
 
 recording_frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
 speaking_frame_queue = deque(maxlen=50)  # Adjust maxlen as needed
-speaking_audio_queue = deque(maxlen=50)
+speaking_audio_queue = deque(maxlen=1000)
 
 is_recording = threading.Event()
 is_speaking = threading.Event()
@@ -67,7 +67,7 @@ def webm_to_pyaudio():
         process.stdout.close()
         process.wait()
 
-        logger.info(f"webm_to_pyaudio thread working. length of speaking_audio_queue({len(speaking_audio_queue)})")
+        logger.info(f"webm_to_pyaudio thread working: length of speaking_audio_queue({len(speaking_audio_queue)})")
 
 
 def start_speaking():
