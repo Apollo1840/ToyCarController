@@ -39,7 +39,7 @@ SPEAK_CHUNK_SIZE = 2024
 SPEAK_RATE = 48000  # Sampling rate
 
 recording_frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
-speaking_frame_queue = deque(maxlen=100)  # Adjust maxlen as needed
+speaking_frame_queue = deque(maxlen=10)  # Adjust maxlen as needed
 
 is_recording = threading.Event()
 is_speaking = threading.Event()
