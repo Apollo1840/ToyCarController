@@ -67,7 +67,7 @@ def webm_to_pyaudio():
         process.stdout.close()
         process.wait()
 
-        logger.info("webm_to_pyaudio thread working.")
+        logger.info(f"webm_to_pyaudio thread working. length of speaking_audio_queue({len(speaking_audio_queue)})")
 
 
 def start_speaking():
@@ -95,7 +95,7 @@ def start_speaking():
         logger.info("Speaking started at %s", datetime.now())
 
         while is_speaking.is_set():
-            if len(speaking_frame_queue) == 0:
+            if len(speaking_audio_queue) == 0:
                 time.sleep(0.1)
             else:
                 # logger.info(f"current queue size: {len(speaking_frame_queue)}")
