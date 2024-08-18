@@ -71,16 +71,6 @@ def webm_to_pyaudio():
 
 
 def start_speaking():
-    def playback(stream):
-        logger.info("keep speaking at %s", datetime.now())
-
-        while is_speaking.is_set():
-            if len(speaking_audio_queue) == 0:
-                time.sleep(0.1)
-                continue
-
-            data = speaking_audio_queue.popleft()
-            stream.write(data)
 
     # Initialize PyAudio and open a stream before entering the loop
     p = pyaudio.PyAudio()
@@ -95,11 +85,12 @@ def start_speaking():
         logger.info("Speaking started at %s", datetime.now())
 
         while is_speaking.is_set():
+            logger.info("speaking...")
             if len(speaking_audio_queue) == 0:
                 time.sleep(0.1)
             else:
                 # logger.info(f"current queue size: {len(speaking_frame_queue)}")
-                playback(speak_stream)
+                speak_stream.write(speaking_audio_queue.popleft())
     finally:
         # Stop and close the stream 
         speak_stream.stop_stream()
