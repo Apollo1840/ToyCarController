@@ -1,5 +1,6 @@
 # external pkg
 import threading
+import numpy as np
 from flask import Flask, render_template, request, Response, jsonify
 import time
 import pyaudio
@@ -39,7 +40,8 @@ SPEAK_CHUNK_SIZE = 2024
 SPEAK_RATE = 48000  # Sampling rate
 
 recording_frame_queue = deque(maxlen=5)  # Adjust maxlen as needed
-speaking_frame_queue = deque(maxlen=10)  # Adjust maxlen as needed
+speaking_frame_queue = deque(maxlen=50)  # Adjust maxlen as needed
+speaking_audio_queue = deque(maxlen=1000)
 
 is_recording = threading.Event()
 is_speaking = threading.Event()
@@ -48,28 +50,39 @@ recording_thread = None
 speaking_thread = None
 
 
-def start_speaking():
-    def playback(in_data, stream):
-        """in_data is webm_binary"""
+def webm_to_pyaudio():
+    global speaking_frame_queue, speaking_audio_queue
 
-        logger.info("keep speaking at %s", datetime.now())
-        # Use FFmpeg to decode the binary data of the webm file to raw PCM data
+    while True:
+        if len(speaking_frame_queue) == 0:
+            time.sleep(0.1)
+            continue
+
+        # Start a single FFmpeg process
         process = (ffmpeg.input('pipe:0', format='webm').output('pipe:', format='wav')
                    .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True))
-        process.stdin.write(in_data)
+
+        while len(speaking_frame_queue) > 0:
+            in_data = speaking_frame_queue.popleft()
+            process.stdin.write(in_data)
+
         process.stdin.close()
 
-        process.stdout.read(128)  # remove an artifact noise
-        while is_speaking.is_set():
+        process.stdout.read(128)  # Remove an artifact noise
+
+        while True:
             data = process.stdout.read(SPEAK_CHUNK_SIZE)
             if not data:
-                # logger.info("no stream at %s", datetime.now())
                 break
-            stream.write(data)
+            speaking_audio_queue.append(data)
 
         process.stdout.close()
         process.wait()
 
+        logger.info(f"webm_to_pyaudio thread working: length of speaking_audio_queue({len(speaking_audio_queue)})")
+
+
+def start_speaking():
     # Initialize PyAudio and open a stream before entering the loop
     p = pyaudio.PyAudio()
     speak_stream = p.open(format=FORMAT,
@@ -83,11 +96,16 @@ def start_speaking():
         logger.info("Speaking started at %s", datetime.now())
 
         while is_speaking.is_set():
-            if len(speaking_frame_queue) == 0:
+            # logger.info("speaking...")
+            if len(speaking_audio_queue) == 0:
                 time.sleep(0.1)
             else:
                 # logger.info(f"current queue size: {len(speaking_frame_queue)}")
-                playback(speaking_frame_queue.popleft(), speak_stream)
+                audio_data = np.frombuffer(speaking_audio_queue.popleft(), dtype=np.int16)
+                audio_data = np.clip(audio_data * 8, -32768, 32767)
+                speak_stream.write(audio_data.astype(np.int16).tobytes())
+
+                # speak_stream.write(speaking_audio_queue.popleft())
     finally:
         # Stop and close the stream
         speak_stream.stop_stream()
@@ -200,14 +218,18 @@ def toggle_tracking():
 @app.route('/speak', methods=['POST'])
 def toggle_speak():
     logger.info("speak button clicked at %s", datetime.now())
-    global speaking_thread
+    global speaking_thread, speaking_thread_data_process
     if not is_speaking.is_set():
+        speaking_thread_data_process = threading.Thread(target=webm_to_pyaudio)
+        speaking_thread_data_process.start()
         speaking_thread = threading.Thread(target=start_speaking)
         speaking_thread.start()
+
     else:
         is_speaking.clear()
         if speaking_thread is not None:
             speaking_thread.join()
+            speaking_thread_data_process.join()
     return jsonify({"status": "speak toggled"})
 
 
